@@ -12,6 +12,7 @@ def paraphrase_simple_question(
     answer: str = None,
     answer_type: str = None,
     model_name: str = "gpt-4o",
+    alt_client: OpenAI | None = None,
 ) -> str:
     """
     Paraphrases the given question using the OpenAI model specified.
@@ -25,6 +26,10 @@ def paraphrase_simple_question(
     Returns:
         str: The paraphrased question.
     """
+    if not alt_client is None:
+        local_client = alt_client
+    else:
+        local_client = client
     prompt_text = f"Paraphrase the following question: '{question}'"
     try:
         # Some examples include:
@@ -34,7 +39,7 @@ def paraphrase_simple_question(
         # Etc.
         # If there is a statement from beginning of time to the end of time,
         # this will mean it is always true for the whole timeline.
-        response = client.chat.completions.create(
+        response = local_client.chat.completions.create(
             model=model_name,
             messages=[
                 {
@@ -63,8 +68,7 @@ def paraphrase_simple_question(
 
 
 def paraphrase_medium_question(
-    question: str,
-    model_name: str = "gpt-4o",
+    question: str, model_name: str = "gpt-4o", alt_client: OpenAI | None = None
 ) -> str:
     """
     Paraphrases the given question using the OpenAI model specified.
@@ -78,6 +82,10 @@ def paraphrase_medium_question(
         str: The paraphrased question.
     """
     prompt_text = f"Paraphrase the following question: '{question}'"
+    if not alt_client is None:
+        local_client = alt_client
+    else:
+        local_client = client
     try:
         # Some examples include:
         # Who is affiliated with the organization during a given time.
@@ -85,7 +93,7 @@ def paraphrase_medium_question(
         # When/During/when is start time ...
         # Etc.
         # If there is a statement from beginning of time to the end of time, this will mean it is always true for the whole timeline.
-        response = client.chat.completions.create(
+        response = local_client.chat.completions.create(
             model=model_name,
             messages=[
                 {
