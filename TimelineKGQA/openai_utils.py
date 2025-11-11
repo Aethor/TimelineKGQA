@@ -4,8 +4,6 @@ from TimelineKGQA.utils import get_logger
 
 logger = get_logger(__name__)
 
-client = OpenAI()
-
 
 def paraphrase_simple_question(
     question: str,
@@ -27,9 +25,9 @@ def paraphrase_simple_question(
         str: The paraphrased question.
     """
     if not alt_client is None:
-        local_client = alt_client
+        client = alt_client
     else:
-        local_client = client
+        client = OpenAI()
     prompt_text = f"Paraphrase the following question: '{question}'"
     try:
         # Some examples include:
@@ -39,7 +37,7 @@ def paraphrase_simple_question(
         # Etc.
         # If there is a statement from beginning of time to the end of time,
         # this will mean it is always true for the whole timeline.
-        response = local_client.chat.completions.create(
+        response = client.chat.completions.create(
             model=model_name,
             messages=[
                 {
@@ -83,9 +81,9 @@ def paraphrase_medium_question(
     """
     prompt_text = f"Paraphrase the following question: '{question}'"
     if not alt_client is None:
-        local_client = alt_client
+        client = alt_client
     else:
-        local_client = client
+        client = OpenAI()
     try:
         # Some examples include:
         # Who is affiliated with the organization during a given time.
@@ -93,7 +91,7 @@ def paraphrase_medium_question(
         # When/During/when is start time ...
         # Etc.
         # If there is a statement from beginning of time to the end of time, this will mean it is always true for the whole timeline.
-        response = local_client.chat.completions.create(
+        response = client.chat.completions.create(
             model=model_name,
             messages=[
                 {
