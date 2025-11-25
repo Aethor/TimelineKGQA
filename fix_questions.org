@@ -1,0 +1,808 @@
+#+TITLE: Fixing complex and medium questions
+#+PROPERTY: header-args:Python :python .venv/bin/python3 :session *python-org*
+
+/Note: the code included in this document was executed prior to fixing
+the issues from the repository. To reproduce execution of the code,
+one needs the original TimelineKGQA repository./
+
+* Introduction
+
+In this document, we try to fix the problem of incorrect for =medium=
+and =complex= questions. To explain the existing problems, we note
+there are two fields of interest: ~"question"~ and
+~"question_paraphrase~". The first is a raw, template generated
+question. The second is the same question in a more natural style,
+paraphrased by an llm. Currently, we notice two issues:
+
+1. Some questions are completely wrong
+2. The paraphrase for some questions is wrong.
+
+
+The second issue is also influenced by the first one: if some template
+generated questions are incorrect, it can mean it's not possible or
+more difficult to paraphrase.
+
+We treat both issues below. To do so, let's first load the existing data:
+
+#+begin_src python
+import pandas as pd
+
+df_cq = pd.read_csv("./Datasets/unified_kg_cron_questions_all.csv")
+df_cq["dataset"] = "CronQuestions"
+df_icews = pd.read_csv("./Datasets/unified_kg_icews_actor_questions_all.csv")
+df_icews["dataset"] = "IcewsActor"
+
+df = pd.concat([df_cq, df_icews])
+df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+          id  source_kg_id                                           question  ... temporal_relation  split        dataset
+0      22344  106066282723  From when to when, Steven Soderbergh award rec...  ...             union  train  CronQuestions
+1      24416  276735198453  How long is the total duration of Gianvito Pla...  ...               sum  train  CronQuestions
+2      25173  294616073432  Prior to Friesland head of government Karin Ev...  ...             X < Y  train  CronQuestions
+3      23000  266950324866  Who/Which Organisation member of sports team B...  ...             X < Y  train  CronQuestions
+4      22919  204648044231  Which organisation is award receiveded by Harr...  ...             X > Y  train  CronQuestions
+...      ...           ...                                                ...  ...               ...    ...            ...
+89367  25979         49423  From when to when did Jamaica Tourist Board Af...  ...          timeline  train     IcewsActor
+89368  19348          3957  When did Glenbert Croes end Affiliation To Exe...  ...          timeline  train     IcewsActor
+89369    505         76559  Who Affiliation To Provincial (Puerto Rico) fr...  ...          timeline  train     IcewsActor
+89370  26379         21988  At what time did David Charles Ganao start Aff...  ...          timeline  train     IcewsActor
+89371   9430         59998  At what time did Punsalmaagiyn Ochirbat finish...  ...          timeline  train     IcewsActor
+
+[131092 rows x 12 columns]
+#+end_example
+
+* Wrong questions
+
+We noticed that some questions are wrong related to their answers,
+seemingly because their template is wrong. To find these questions, we
+proceed as follows:
+
+1. Determine categories of questions
+2. Check is something is wrong for each category of questions,
+   indicating an issue with the template
+
+
+Templates are divided in three to four levels:
+
+1. =question_level=
+2. =question_type=
+3. =answer_type=
+4. Optionally, =temporal_relation=
+
+
+We use the first three levels to make categories:
+
+#+begin_src python
+from typing import Literal
+
+
+def get_question_category(row: pd.Series) -> tuple:
+    return (row["question_level"], row["question_type"], row["answer_type"])
+
+
+def get_question_of_category(
+    question_level: Literal["simple", "medium", "complex"],
+    question_type: str,
+    answer_type: str,
+    temporal_relation: str | None = None,
+    i: int = 0,
+) -> pd.Series | None:
+    filtered_df = df[
+        (df["question_level"] == question_level)
+        & (df["question_type"] == question_type)
+        & (df["answer_type"] == answer_type)
+    ]
+    if not temporal_relation is None:
+        filtered_df = filtered_df[filtered_df["temporal_relation"] == temporal_relation]
+    if len(filtered_df) == 0:
+        return None
+    return filtered_df.iloc[i]
+
+
+set(get_question_category(row) for _, row in df.iterrows() if not row["question_level"] == "simple")
+#+end_src
+
+#+RESULTS:
+: {('medium', 'timeline_recovery_temporal_constrainted_retrieval', 'subject'), ('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_duration'), ('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_duration'), ('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'object'), ('medium', 'timeline_recovery_temporal_constrainted_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_ranking'), ('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_union_or_intersection'), ('medium', 'timeline_recovery_timeline_recovery', 'relation_union_or_intersection'), ('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_union_or_intersection'), ('medium', 'timeline_recovery_timeline_recovery', 'relation_duration'), ('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'subject'), ('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'subject'), ('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'subject')}
+
+** =('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'object')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_position_retrieval_temporal_constrained_retrieval", "object"
+)
+question["question"]
+#+end_src
+
+#+RESULTS:
+: ('Which organisation is award receiveded by Harry Bolton Seed after Nikolay '
+:  'Rukavishnikov award received Order of Sukhbaatar?')
+
+#+begin_src python
+question["answer"]
+#+end_src
+
+#+RESULTS:
+: National Medal of Science
+
+While the question is asking about an organization, the answer is an
+award. Upon investigation, this is because templates are wrong!
+
+[[file:TimelineKGQA/templates.py::"object": {]]
+
+For example, we can notice the following template:
+
+#+begin_src python
+"Before {second_event_subject} {second_event_predicate} {second_event_object}, which organisation is {first_event_predicate} by {first_event_subject}?"
+#+end_src
+
+However, the ={first_event_object}= is not necessarily an
+organization! It could be a person, an award... Therefore, we correct
+these templates like so:
+
+#+begin_src python
+"Before {second_event_subject} {second_event_predicate} {second_event_object}, who/what/which organisation is {first_event_predicate} by {first_event_subject}?"
+#+end_src
+
+** =('medium', 'timeline_recovery_timeline_recovery', 'relation_duration')=
+
+#+begin_src python :results pp
+question = get_question_of_category("medium", "timeline_recovery_timeline_recovery", "relation_duration")
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('How long is the total duration of Atta Mohammed Nur Affiliation To Northern '
+:  'Alliance and Kennedy Sakeni Affiliation To Ministry of Home Affairs?',
+:  '17 years, 6 months, 24 days, 0 hours, 0 minutes, 0 seconds')
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_recovery_timeline_recovery", "relation_duration", i=1
+)
+(question["question"], question["answer"], question["answer_type"])
+#+end_src
+
+#+RESULTS:
+: ('What is the average duration of Attorney General Ruddock Affiliation To '
+:  'Opposition Major Party (Out Of Government) (Australia) and Platinum Group '
+:  'Metals Ltd Affiliation To Heavy Industrial / Chemical Business '
+:  '(Multi-National Corporations)?',
+:  'forever',
+:  'relation_duration')
+
+#+begin_src python :results pp
+question["events"]
+#+end_src
+
+#+RESULTS:
+: ("['Attorney General Ruddock|Affiliation To|Opposition Major Party (Out Of "
+:  "Government) (Australia)|beginning of time|1939-04-25', 'Platinum Group "
+:  'Metals Ltd|Affiliation To|Heavy Industrial / Chemical Business '
+:  "(Multi-National Corporations)|beginning of time|end of time']")
+
+While the answer is technically correct, this question should not
+appear in the dataset because the start/end time of these affiliations
+are incorrect. Maybe 'end of time' should be 'ongoing'?
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_recovery_timeline_recovery", "relation_duration", i=2
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ("What is the duration of N'Sikan Konan Kouame Affiliation To National "
+:  "Assembly of Côte d'Ivoire jointly when Oleg Rutkovsky Affiliation To Cabinet "
+:  '(Russia)?',
+:  '(1998-05-05, 1998-09-29)')
+
+#+begin_src python :results pp
+question["events"]
+#+end_src
+
+#+RESULTS:
+: ('["N\'Sikan Konan Kouame|Affiliation To|National Assembly of Côte '
+:  'd\'Ivoire|beginning of time|end of time", \'Oleg Rutkovsky|Affiliation '
+:  "To|Cabinet (Russia)|1998-05-05|1998-09-29']")
+
+#+begin_src python
+question["temporal_relation"]
+#+end_src
+
+#+RESULTS:
+: duration
+
+Problems:
+
+1. the beginning of time/end of time timestamps
+2. the question asks for a duration but the answer is a range?
+
+
+This type of question does not even appear in templates.py!
+
+#+begin_src python
+df[df["temporal_relation"] == "duration"]["answer"]
+#+end_src
+
+#+RESULTS:
+#+begin_example
+36                                                     NaN
+183                                                    NaN
+247                                                    NaN
+276                                                    NaN
+322                                                    NaN
+                               ...                        
+88039             (2009-11-13, 9999-12-31T23:59:59.999999)
+88067                             (1994-01-01, 2000-11-29)
+88112    (0001-01-01T00:00:00.000000, 9999-12-31T23:59:...
+88241                             (1993-07-02, 2008-07-27)
+88271                             (1991-06-22, 1996-05-31)
+Name: answer, Length: 3459, dtype: object
+#+end_example
+
+Also, the answer should be a duration, not a time range. This is an issue in the code here
+[[file:TimelineKGQA/generator.py::elif question_draft\["answer_type"\] == "relation_duration":]]
+
+
+
+** =('complex', 'timeline_position_retrieval*3', 'relation_duration')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*3", "relation_duration"
+)
+(question["question"], question["answer"], question["answer_type"])
+#+end_src
+
+#+RESULTS:
+: ('What is the duration of Hamish Linklater nominated for Drama Desk Award for '
+:  'Outstanding Actor in a Play jointly when Finn Årup Nielsen educated at '
+:  'Technical University of Denmark and Axel von Ambesser award received '
+:  "Commander's Cross of the Order of Merit of the Federal Republic of Germany?",
+:  nan,
+:  'relation_duration')
+
+How come the answer is NaN?
+
+#+begin_src python :results pp
+question["events"]
+#+end_src
+
+#+RESULTS:
+: ("['Hamish Linklater|nominated for|Drama Desk Award for Outstanding Actor in a "
+:  "Play|2014-01-01|2014-01-01', 'Finn Årup Nielsen|educated at|Technical "
+:  'University of Denmark|1993-01-01|1996-01-01\', "Axel von Ambesser|award '
+:  "received|Commander's Cross of the Order of Merit of the Federal Republic of "
+:  'Germany|1985-01-01|1985-01-01"]')
+
+... OK so it indeed should be invalid since 2014-01-01/2014-01-01 is
+an "empty" timerange.
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*3", "relation_duration", i=1
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('Which one is 2 longest among Paddy McGuire member of sports team Manchester '
+:  'City F.C., Llibert Cuatrecasas i Membrado position held Member of the '
+:  'Congress of Deputies of Spain, Screen Actors Guild Award for Outstanding '
+:  'Performance by a Male Actor in a Drama Series winner James Gandolfini?',
+:  '2')
+
+The answer being 2 might be problematic.
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*3", "relation_duration", i=2
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('What is the average duration of Howard Matthews member of sports team Port '
+:  'Vale F.C., Andrzej Stasiuk award received Kościelski Award and Tommy Jones '
+:  'member of sports team Watford F.C.?',
+:  '2 years, 0 months, 0 days, 0 hours, 0 minutes, 0 seconds')
+
+** =('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_duration')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_position_retrieval_timeline_position_retrieval", "relation_duration"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('How long is the total duration of Gianvito Plasmati member of sports team '
+:  'Atalanta B.C. and Charles Guggenheim award received Academy Award for Best '
+:  'Documentary (Short Subject)?',
+:  '0 years, 0 months, 0 days, 0 hours, 0 minutes, 0 seconds')
+
+Should this be allowed?
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_position_retrieval_timeline_position_retrieval", "relation_duration", i=1
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('Is the duration of United States Seventh Fleet director/manager Robert F. '
+:  'Willard shorter the duration of Katrín Jakobsdóttir position held Member of '
+:  'the 2013-2016 Parliament of Iceland?',
+:  'shorter')
+
+OK
+
+
+
+** =('medium', 'timeline_recovery_timeline_recovery', 'relation_union_or_intersection')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_recovery_timeline_recovery", "relation_union_or_intersection"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('From when to when, Hauser Center for Nonprofit Organizations Affiliation To '
+:  'Information / Communication / Transparency NGOs (United States) or Elaine '
+:  'Lan Chao Affiliation To U.S. Republican Party?',
+:  '(0001-01-01T00:00:00.000000, 9999-12-31T23:59:59.999999)')
+
+#+begin_src python :results pp
+question["temporal_relation"]
+#+end_src
+
+#+RESULTS:
+: 'union'
+
+We note two problems here:
+
+1. the rather absurd timeline answer
+2. the formulation of the question is difficult, which could be
+   problematic for the LLM when paraphrasing
+
+
+The concept behind this question is to retrieve the union of
+timestamp, but timestamps have to form a chain. The formulation does
+not seem possible to fix, because this concept is difficult to express
+in natural language and can easily lead to ambiguity.
+
+
+- [[file:TimelineKGQA/templates.py::"From when to when, {first_event_subject} {first_event_predicate} {first_event_object} or {second_event_subject} {second_event_predicate} {second_event_object} or {third_event_subject} {third_event_predicate} {third_event_object}?"]]
+- [[file:TimelineKGQA/templates.py::"From when to when, {first_event_subject} {first_event_predicate} {first_event_object} or {second_event_subject} {second_event_predicate} {second_event_object}?"]]
+
+
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_recovery_timeline_recovery", "relation_union_or_intersection", i=1
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('From when to when, Dawn Primarolo Affiliation To Parliament, at the same '
+:  'time, Delompu Yvonne Bouabre Affiliation To National Assembly of Côte '
+:  "d'Ivoire?",
+:  '(1987-06-11, 9999-12-31T23:59:59.999999)')
+
+
+** =('complex', 'timeline_position_retrieval*3', 'relation_union_or_intersection')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*3", "relation_union_or_intersection"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('From when to when, Les Roberts member of sports team Brentford F.C. or Mike '
+:  'Thompson position held United States representative or Tom Aldredge '
+:  'nominated for Tony Award for Best Featured Actor in a Play?',
+:  'No Answer')
+
+Same problem as above for unions.
+
+
+** =('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'subject')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrievel*2+temporal_constrainted_retrieval", "subject"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('Who Alejandro Encinas Rodríguez Federal District, during Dedet Edgar Guzman '
+:  'Affiliation To Grand National Alliance, during Farooq Abdulla Affiliation '
+:  'To, Elite (India)?',
+:  'Alejandro Encinas Rodríguez')
+
+It seems that the predicate is missing here, so we should add it back to the template.
+
+[[file:TimelineKGQA/templates.py::"timeline_position_retrieval*2+temporal_constrained_retrieval": {]]
+
+
+** =('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_union_or_intersection')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_position_retrieval_timeline_position_retrieval", "relation_union_or_intersection"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('From when to when, Steven Soderbergh award received Satellite Award for Best '
+:  'Director or Oleg Ivanovich Kramarenko member of sports team FC Dinamo '
+:  'Moscow?',
+:  'No Answer')
+
+#+begin_src python :results pp
+question["events"]
+#+end_src
+
+#+RESULTS:
+: ("['Steven Soderbergh|award received|Satellite Award for Best "
+:  "Director|2001-01-01|2001-01-01', 'Oleg Ivanovich Kramarenko|member of sports "
+:  "team|FC Dinamo Moscow|1976-01-01|1977-01-01']")
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium",
+    "timeline_position_retrieval_timeline_position_retrieval",
+    "relation_union_or_intersection",
+    i=7,
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('From when to when, David Vitter position held United States representative '
+:  'or Jo Kuffour member of sports team Swindon Town F.C.?',
+:  '(1999-01-01, 2005-01-01)')
+
+We suppress that case as formulating it in natural language can easily
+be ambiguous.
+
+
+** =('complex', 'timeline_position_retrieval*3', 'relation_ranking')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*3", "relation_ranking"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('Ulm is ranking what based on the start time among Ulm country Nazi Germany, '
+:  'David di Donatello for Best Film winner Luchino Visconti and Boudewijn '
+:  'Zenden member of sports team Liverpool F.C.?',
+:  '1')
+
+[[file:TimelineKGQA/templates.py::"rank_start_time": \[]]
+
+We modify the template like so:
+
+#+begin_src python
+"What is the rank of {first_event_subject} based on start time among {first_event_subject} {first_event_predicate} {first_event_object}, {second_event_subject} {second_event_predicate} {second_event_object} and {third_event_subject} {third_event_predicate} {third_event_object}?"
+#+end_src
+
+
+** =('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'subject')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_position_retrieval_temporal_constrained_retrieval", "subject", i=4
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ("Who position held member of the European Parliament 12784 days {'relation': "
+:  "'X > Y', 'description': 'X is after Y', 'category': 'tr&tp', 'code': "
+:  "'trtp-23', 'semantic': 'after'} Richard Wood, Baron Holderness position held "
+:  'Member of the 46th Parliament of the United Kingdom?',
+:  'Kristiina Ojuland')
+
+#+begin_src python
+question["paraphrased_question"]
+#+end_src
+
+#+RESULTS:
+: Who was a member of the European Parliament after Richard Wood, Baron Holderness, served as a Member of the 46th Parliament of the United Kingdom?
+
+Apparently the question has some structured data inside, which must
+not be good for paraphrasing.
+
+
+** =('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'object')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*2+temporal_constrained_retrieval", "object"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('Adalbert Schnee military rank which organisation, before Gerhard Hager '
+:  'position held member of the European Parliament, before k.d. lang nominated '
+:  'for Juno Award for Single of the Year?',
+:  'Fähnrich zur See')
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "complex", "timeline_position_retrieval*2+temporal_constrained_retrieval", "object", i=1
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('Mona Nemer award received which organisation, after Karl Kanka position held '
+:  'member of the German Bundestag, before Thomas Langmann award received BAFTA '
+:  'Award for Best Film?',
+:  'Léo-Pariseau Prize')
+
+
+We fix the template to not include only organizations.
+
+#+begin_src python
+"{first_event_subject} {first_event_predicate} which organisation, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate} {third_event_object}?"
+#+end_src
+
+
+
+** =('complex', 'timeline_position_retrieval*3', 'relation_duration')=
+
+#+begin_src python :results pp
+question = get_question_of_category(
+    "medium", "timeline_recovery_timeline_recovery", "relation_duration"
+)
+(question["question"], question["answer"])
+#+end_src
+
+#+RESULTS:
+: ('How long is the total duration of Atta Mohammed Nur Affiliation To Northern '
+:  'Alliance and Kennedy Sakeni Affiliation To Ministry of Home Affairs?',
+:  '17 years, 6 months, 24 days, 0 hours, 0 minutes, 0 seconds')
+
+
+** Summary of found issues
+
+- For TPR->TCR questions (maybe others?), template always asks about
+  an oganization but the object might not be an organization. We
+  correct templates to be more general.
+- For questions with an answer type of ="relation_duration"= or
+  ="duration"=, the answer may be "forever" because timestamps are
+  beginning/end of time.
+- Some questions ask for durations but the generated answer is a range
+  [[file:TimelineKGQA/generator.py::elif question_draft\["answer_type"\]
+  == "relation_duration":]]
+- Some answers with an answer type of ="relation_duration"= or
+  ="duration"= are NaN, because some events are instant instead of
+  timestamps (like receiving an award)
+- The answer for ranking questions may be problematic as it is only a
+  number.
+- Some durations are 0 because of the wrong reasons (time intervals
+  that should be timepoints)
+- questions with a temporal relation of ="union"= should be deleted,
+  as their natural language formulation is challenging and easily
+  ambiguous.
+- The predicate is missing from a template
+  [[file:TimelineKGQA/templates.py::"timeline_position_retrieval*2+temporal_constrained_retrieval":
+  {]]
+- The ranking template can be improved in terms of english
+  [[file:TimelineKGQA/templates.py::"rank_start_time": \[]]
+- Some questions have structured data inside them, which should be
+  removed as it hinders paraphrasing.
+
+* Wrong paraphrases
+
+Currently, there are two
+functions to generate question paraphrases:
+
+- ~TimelineKGQA.openai_utils.paraphrase_simple_question~
+- ~TimelineKGQA.openai_utils.paraphrase_medium_question~ (which is
+  also used for complex questions)
+
+
+A first critical issue is that there was a bug relating the paraphrase
+generation for complex question, this was fixed [[https://github.com/PascalSun/TimelineKGQA/pull/16][in this pull request]].
+
+Each function only use a simple prompt. This is not a problem for
+simple questions: since questions are simple enough, the paraphrase is
+correct in our observations. However, we observed that for =medium=
+and =complex= questions the paraphrase is very often incorrect (7/10
+incorrect in a manual inspection for =medium= level questions). We
+hypothesize this is due to the raw generated questions being too
+unatural and the paraphrase prompt being too general. We propose to
+fix that issue by specializing prompts and adding a relevant example.
+
+Each question have several attributes we can use to specialize the
+prompt:
+
+#+begin_src python :results pp
+{
+    "question_level": set(df["question_level"]),
+    "question_type": set(df["question_type"]),
+    "answer_type": set(df["answer_type"]),
+    # omitted because there are too many
+    # "temporal_relation": set(df["temporal_relation"])
+}
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{'answer_type': {'duration',
+                 'object',
+                 'relation_duration',
+                 'relation_ranking',
+                 'relation_union_or_intersection',
+                 'subject',
+                 'timestamp_end',
+                 'timestamp_range',
+                 'timestamp_start'},
+ 'question_level': {'complex', 'medium', 'simple'},
+ 'question_type': {'temporal_constrained_retrieval',
+                   'temporal_constrainted_retrieval',
+                   'timeline_position_retrieval',
+                   'timeline_position_retrieval*2+temporal_constrained_retrieval',
+                   'timeline_position_retrieval*3',
+                   'timeline_position_retrieval_temporal_constrained_retrieval',
+                   'timeline_position_retrieval_timeline_position_retrieval',
+                   'timeline_position_retrievel*2+temporal_constrainted_retrieval',
+                   'timeline_recovery',
+                   'timeline_recovery_temporal_constrainted_retrieval',
+                   'timeline_recovery_timeline_recovery'}}
+#+end_example
+
+Intuitively, we hypothesize that the =answer_type= is the most useful
+to specialize a prompt. 
+
+Let's create an openAI client we will use to request the API:
+
+#+begin_src python :results pp
+from openai import OpenAI
+
+# in this example we use ollama, but one could use any endpoint
+client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+# set a model for the rest of the document
+model = "gemma3:12b"
+
+(client, model)
+#+end_src
+
+#+RESULTS:
+: (<openai.OpenAI object at 0x7fcdde4d6a50>, 'gemma3:12b')
+
+
+Let's experiment on a =medium= question by adding an example and
+specifying the answer type:
+
+#+begin_src python
+question = df[df["question_level"] == "medium"].iloc[1]
+question
+#+end_src
+
+#+RESULTS:
+#+begin_example
+id                                                                  24416
+source_kg_id                                                 276735198453
+question                How long is the total duration of Gianvito Pla...
+answer                  0 years, 0 months, 0 days, 0 hours, 0 minutes,...
+paraphrased_question    How does the duration of Gianvito Plasmati's m...
+events                  ['Gianvito Plasmati|member of sports team|Atal...
+question_level                                                     medium
+question_type           timeline_position_retrieval_timeline_position_...
+answer_type                                             relation_duration
+temporal_relation                                                     sum
+split                                                               train
+dataset                                                     CronQuestions
+Name: 1, dtype: object
+#+end_example
+
+#+begin_src python :results pp
+question["question"]
+#+end_src
+
+#+RESULTS:
+: ('How long is the total duration of Gianvito Plasmati member of sports team '
+:  'Atalanta B.C. and Charles Guggenheim award received Academy Award for Best '
+:  'Documentary (Short Subject)?')
+
+Let's create a similar example:
+
+#+begin_src python :results none
+example = (
+    "How long is the total duration of Association of Christian Democratic Students chairperson Jürgen Hardt and Giovanni Messe military rank lieutenant?",
+    "What is the sum of the durations of Jürgen Hardt mandate as the chairperson of the Association of Christian Democratic Students and Giovanni Messe time as a lieutenant?",
+)
+#+end_src
+
+
+#+begin_src python :results pp
+coarse_answer_type = {
+    "timestamp_end": "timestamp",
+    "timestamp_start": "timestamp",
+    "relation_duration": "duration",
+    "duration": "duration",
+    "relation_ranking": "ranking",
+    "subject": "entity",
+    "object": "entity",
+    "timestamp_range": "time interval",
+    "relation_union_or_intersection": "time interval",
+}
+
+
+def paraphrase_medium(
+    question: str,
+    model_name: str,
+    client: OpenAI,
+    answer_type: str,
+    example: tuple[str, str],
+) -> str:
+    try:
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {
+                    "role": "system",
+                    "content": """You are an expert on paraphrasing questions.
+                    You job is paraphrasing this question into a natural language question.
+                    The answer to this question is a {}.
+                    You must mention all temporal constraints of the question.
+                    Do not mention any specific time in the question, it is a type of implicit temporal question.
+                    Only output the paraphrase of the question and nothing else.
+
+                    Example:
+                    question: {}
+                    paraphrase: {} 
+                    """.format(
+                        coarse_answer_type.get(answer_type, answer_type),
+                        example[0],
+                        example[1],
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Paraphrase the following question: {question}",
+                },
+            ],
+            max_tokens=100,
+            temperature=0.8,
+            stop=["\n"],
+        )
+        paraphrased_question = response.choices[0].message.content
+        return paraphrased_question
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return ""
+
+
+paraphrase = paraphrase_medium(
+    question["question"], model, client, question["answer_type"], example
+)
+paraphrase
+#+end_src
+
+#+RESULTS:
+: ('What is the combined length of Gianvito Plasmati’s time as a member of '
+:  'Atalanta B.C. and the period Charles Guggenheim’s Academy Award-winning '
+:  'documentary was recognized?')
