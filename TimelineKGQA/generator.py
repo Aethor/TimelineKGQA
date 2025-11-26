@@ -656,7 +656,6 @@ class TKGQAGenerator:
             )
 
             for question_obj in questions:
-
                 question_obj["source_kg_id"] = int(source_kg_id)
                 # get dict to tuple, sequence should be the same as the sql command
                 data = (
@@ -886,24 +885,24 @@ class TKGQAGenerator:
                 "answer_type": "relation_union_or_intersection",
                 "temporal_relation": "intersection",
             },
-            {
-                "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
-                f"???[Timeline Operation on ({first_event_start_time}, {first_event_end_time}) "
-                f"vs ({second_event_start_time}, {second_event_end_time})]??? "
-                f"{second_event_subject} {second_event_predicate} {second_event_object}?",
-                "answer": "Union/Intersection of the time range",
-                "paraphrased_question": None,
-                "events": [
-                    f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
-                    f"{first_event_start_time}|{first_event_end_time}",
-                    f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
-                    f"{second_event_start_time}|{second_event_end_time}",
-                ],
-                "question_level": "medium",
-                "question_type": "timeline_position_retrieval_timeline_position_retrieval",
-                "answer_type": "relation_union_or_intersection",
-                "temporal_relation": "union",
-            },
+            # {
+            #     "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
+            #     f"???[Timeline Operation on ({first_event_start_time}, {first_event_end_time}) "
+            #     f"vs ({second_event_start_time}, {second_event_end_time})]??? "
+            #     f"{second_event_subject} {second_event_predicate} {second_event_object}?",
+            #     "answer": "Union/Intersection of the time range",
+            #     "paraphrased_question": None,
+            #     "events": [
+            #         f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
+            #         f"{first_event_start_time}|{first_event_end_time}",
+            #         f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
+            #         f"{second_event_start_time}|{second_event_end_time}",
+            #     ],
+            #     "question_level": "medium",
+            #     "question_type": "timeline_position_retrieval_timeline_position_retrieval",
+            #     "answer_type": "relation_union_or_intersection",
+            #     "temporal_relation": "union",
+            # },
             {
                 "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
                 f"???[Timeline Operation on ({first_event_start_time}, "
@@ -1035,8 +1034,6 @@ class TKGQAGenerator:
                             second_event_predicate=second_event_predicate,
                             second_event_object=second_event_object,
                         )
-                        if temporal_answer is None:
-                            temporal_answer = "No Answer"
                         question_draft["answer"] = temporal_answer
                     elif question_draft["answer_type"] == "relation_allen":
                         temporal_allen_relation = self.relation_allen_time_range(
@@ -1113,18 +1110,20 @@ class TKGQAGenerator:
                         )
                         question_draft["temporal_relation"] = temporal_relation
                         if temporal_relation == "duration":
-                            temporal_answer = self.relation_union_or_intersection(
-                                time_ranges=[
-                                    (
-                                        first_event_start_time_dt,
-                                        first_event_end_time_dt,
-                                    ),
-                                    (
-                                        second_event_start_time_dt,
-                                        second_event_end_time_dt,
-                                    ),
-                                ],
-                                temporal_operator="intersection",
+                            temporal_answer = (
+                                self.relation_union_or_intersection_duration(
+                                    time_ranges=[
+                                        (
+                                            first_event_start_time_dt,
+                                            first_event_end_time_dt,
+                                        ),
+                                        (
+                                            second_event_start_time_dt,
+                                            second_event_end_time_dt,
+                                        ),
+                                    ],
+                                    temporal_operator="intersection",
+                                )
                             )
                             question_draft["question"] = random_pick_template.format(
                                 first_event_subject=first_event_subject,
@@ -1428,25 +1427,25 @@ class TKGQAGenerator:
                 "answer_type": "relation_union_or_intersection",
                 "temporal_relation": "intersection",
             },
-            {
-                "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
-                f"{second_event_predicate} {second_event_object} "
-                f"{third_event_predicate} {third_event_object}?",
-                "answer": "Union/Intersection of the time range",
-                "paraphrased_question": None,
-                "events": [
-                    f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
-                    f"{first_event_start_time}|{first_event_end_time}",
-                    f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
-                    f"{second_event_start_time}|{second_event_end_time}",
-                    f"{third_event_subject}|{third_event_predicate}|{third_event_object}|"
-                    f"{third_event_start_time}|{third_event_end_time}",
-                ],
-                "question_level": "complex",
-                "question_type": "timeline_position_retrieval*3",
-                "answer_type": "relation_union_or_intersection",
-                "temporal_relation": "union",
-            },
+            # {
+            #     "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
+            #     f"{second_event_predicate} {second_event_object} "
+            #     f"{third_event_predicate} {third_event_object}?",
+            #     "answer": "Union/Intersection of the time range",
+            #     "paraphrased_question": None,
+            #     "events": [
+            #         f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
+            #         f"{first_event_start_time}|{first_event_end_time}",
+            #         f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
+            #         f"{second_event_start_time}|{second_event_end_time}",
+            #         f"{third_event_subject}|{third_event_predicate}|{third_event_object}|"
+            #         f"{third_event_start_time}|{third_event_end_time}",
+            #     ],
+            #     "question_level": "complex",
+            #     "question_type": "timeline_position_retrieval*3",
+            #     "answer_type": "relation_union_or_intersection",
+            #     "temporal_relation": "union",
+            # },
             {
                 "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
                 f"{second_event_predicate} {second_event_object} "
@@ -1638,8 +1637,6 @@ class TKGQAGenerator:
                         )
                         logger.debug(question_draft["question"])
                         logger.debug(temporal_answer)
-                        if temporal_answer is None:
-                            temporal_answer = "No Answer"
                         question_draft["answer"] = temporal_answer
                     elif question_draft["answer_type"] == "relation_duration":
                         """
@@ -1662,22 +1659,24 @@ class TKGQAGenerator:
                         )
                         question_draft["temporal_relation"] = temporal_relation
                         if temporal_relation == "duration":
-                            temporal_answer = self.relation_union_or_intersection(
-                                time_ranges=[
-                                    (
-                                        first_event_start_time_dt,
-                                        first_event_end_time_dt,
-                                    ),
-                                    (
-                                        second_event_start_time_dt,
-                                        second_event_end_time_dt,
-                                    ),
-                                    (
-                                        third_event_start_time_dt,
-                                        third_event_end_time_dt,
-                                    ),
-                                ],
-                                temporal_operator="intersection",
+                            temporal_answer = (
+                                self.relation_union_or_intersection_duration(
+                                    time_ranges=[
+                                        (
+                                            first_event_start_time_dt,
+                                            first_event_end_time_dt,
+                                        ),
+                                        (
+                                            second_event_start_time_dt,
+                                            second_event_end_time_dt,
+                                        ),
+                                        (
+                                            third_event_start_time_dt,
+                                            third_event_end_time_dt,
+                                        ),
+                                    ],
+                                    temporal_operator="intersection",
+                                )
                             )
                             question_draft["question"] = random_pick_template.format(
                                 first_event_subject=first_event_subject,
@@ -1982,10 +1981,10 @@ class TKGQAGenerator:
             }
 
     @staticmethod
-    def relation_union_or_intersection(
+    def relation_union_or_intersection_(
         time_ranges: List[Tuple[np.datetime64, np.datetime64]],
         temporal_operator: str = "intersection",
-    ) -> Optional[str]:
+    ) -> Optional[Tuple[np.datetime64, np.datetime64]]:
         """
         This function will return the temporal operator between multiple time ranges
         The temporal operator can be:
@@ -1996,17 +1995,14 @@ class TKGQAGenerator:
             time_ranges (List[Tuple[datetime, datetime]]): A list of time ranges
             temporal_operator (str): The temporal operator
 
-        Returns:
-            str: A string representation of the new time range, or None if no valid range exists.
 
+        Returns:
+            str: The new time range, or None if no valid range exists.
         """
         if temporal_operator not in ["intersection", "union"]:
             raise ValueError(
                 "temporal_operator should be either 'intersection' or 'union'"
             )
-
-        if not time_ranges:
-            return None
 
         # Start with the first time range
         result = time_ranges[0]
@@ -2028,7 +2024,40 @@ class TKGQAGenerator:
                     return None  # No continuous union possible
                 result = (start, end)
 
+        return result
+
+    @staticmethod
+    def relation_union_or_intersection(
+        time_ranges: List[Tuple[np.datetime64, np.datetime64]],
+        temporal_operator: str = "intersection",
+    ) -> Optional[str]:
+        """
+        Returns:
+            str: A string representation of the new time range, or None if no valid range exists.
+        """
+        if not time_ranges:
+            return None
+        result = TKGQAGenerator.relation_union_or_intersection_(
+            time_ranges, temporal_operator
+        )
+        if result is None:
+            return f"There are no {temporal_operator}s between these time intervals."
         return f"({result[0]}, {result[1]})"
+
+    @staticmethod
+    def relation_union_or_intersection_duration(
+        time_ranges: List[Tuple[np.datetime64, np.datetime64]],
+        temporal_operator: str = "intersection",
+    ) -> Optional[str]:
+        if not time_ranges:
+            return None
+        result = TKGQAGenerator.relation_union_or_intersection_(
+            time_ranges, temporal_operator
+        )
+        if result is None:
+            return f"There are no {temporal_operator}s between these time intervals."
+        delta = abs(result[1] - result[0])
+        return TKGQAGenerator.utils_format_np_datetime(delta)
 
     @staticmethod
     def relation_ordinal_time_range(
@@ -2372,7 +2401,6 @@ class TKGQAGenerator:
                         dimension_2_matrix[y, x] = score  # Leverage symmetry
 
             elif sample_strategy == "degree_high":
-
                 for x in range(num_events):
                     for y in range(x + 1, num_events):
                         score = degree_scores[x] = degree_scores[y]
@@ -2687,7 +2715,6 @@ class TKGQAGenerator:
 
     @staticmethod
     def random_selection(matrix, sample_num):
-
         if sample_num > matrix.size:
             raise ValueError(
                 "The sample number should be less than the length of the matrix"
