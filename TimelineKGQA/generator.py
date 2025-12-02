@@ -632,7 +632,7 @@ class TKGQAGenerator:
                 - subject:
                 - object
             - temporal related
-                - Infer a new time range: Union/Intersection
+                - Infer a new time range: Intersection
                 - Infer a temporal relation: Allen
                 - Infer duration, and then compare
                 - Note: Ranking will be the same as Allen, so it will be in **Complex** level
@@ -730,7 +730,7 @@ class TKGQAGenerator:
                 - object
                 - only focus on the first one, as the second will always become the first later
             - temporal related for timeline_position_retrieval_timeline_position_retrieval
-                - Infer a new time range: Union/Intersection
+                - Infer a new time range: Intersection
                 - Infer a temporal relation: Allen
                 - Infer a list of time ranges: Ranking
                 - Infer duration, and then compare
@@ -777,7 +777,7 @@ class TKGQAGenerator:
         - Before, After, During, this is the most common one and shown in the literature
         - Starts from the same time, Ends at the same time, Meets, Overlap, this is another way to add the
             temporal condition (inspired by the allen logic)
-        - Above are from allen temporal logic and intersection/union
+        - Above are from allen temporal logic and intersection
         - We can also add the ranking ones, however, before/after is the same as first/last, under this category
         - Then the rest is the one for duration, question like 3 years before, 3 years after, etc.
 
@@ -857,14 +857,14 @@ class TKGQAGenerator:
 
         This one is mainly from numeric to temporal semantic
 
-        - Infer a new time range: Union/Intersection
+        - Infer a new time range: Intersection
         - Infer a temporal relation: Allen
         - Infer a list of time ranges: Ranking (not considered here)
         - Infer duration, and then compare
         """
         # Timeline Position Retrieval + Timeline Position Retrieval
 
-        # ask for union/intersection of the time range
+        # ask for intersection of the time range
 
         medium_type_2_questions = [
             {
@@ -872,7 +872,7 @@ class TKGQAGenerator:
                 f"[Timeline Operation on ({first_event_start_time}, {first_event_end_time}) vs "
                 f"({second_event_start_time}, {second_event_end_time})]??? "
                 f"{second_event_subject} {second_event_predicate} {second_event_object}?",
-                "answer": "Union/Intersection of the time range",
+                "answer": "Intersection of the time range",
                 "paraphrased_question": None,
                 "events": [
                     f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
@@ -885,24 +885,6 @@ class TKGQAGenerator:
                 "answer_type": "relation_union_or_intersection",
                 "temporal_relation": "intersection",
             },
-            # {
-            #     "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
-            #     f"???[Timeline Operation on ({first_event_start_time}, {first_event_end_time}) "
-            #     f"vs ({second_event_start_time}, {second_event_end_time})]??? "
-            #     f"{second_event_subject} {second_event_predicate} {second_event_object}?",
-            #     "answer": "Union/Intersection of the time range",
-            #     "paraphrased_question": None,
-            #     "events": [
-            #         f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
-            #         f"{first_event_start_time}|{first_event_end_time}",
-            #         f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
-            #         f"{second_event_start_time}|{second_event_end_time}",
-            #     ],
-            #     "question_level": "medium",
-            #     "question_type": "timeline_position_retrieval_timeline_position_retrieval",
-            #     "answer_type": "relation_union_or_intersection",
-            #     "temporal_relation": "union",
-            # },
             {
                 "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
                 f"???[Timeline Operation on ({first_event_start_time}, "
@@ -1303,9 +1285,8 @@ class TKGQAGenerator:
                 - object
                     - trel b, trel c, subject predicate ?
             - type2:
-                - Infer a new time range: Union/Intersection
+                - Infer a new time range: Intersection
                     - trel b, trel c, from when to when the subject predicate object? (intersection)
-                    - within (trel b, trel c), who is the subject predicate object? (union)
                 - Infer a temporal relation: Allen
                     - ? More making sense one is ranking
                     - hard to justify the question that
@@ -1427,25 +1408,6 @@ class TKGQAGenerator:
                 "answer_type": "relation_union_or_intersection",
                 "temporal_relation": "intersection",
             },
-            # {
-            #     "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
-            #     f"{second_event_predicate} {second_event_object} "
-            #     f"{third_event_predicate} {third_event_object}?",
-            #     "answer": "Union/Intersection of the time range",
-            #     "paraphrased_question": None,
-            #     "events": [
-            #         f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
-            #         f"{first_event_start_time}|{first_event_end_time}",
-            #         f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
-            #         f"{second_event_start_time}|{second_event_end_time}",
-            #         f"{third_event_subject}|{third_event_predicate}|{third_event_object}|"
-            #         f"{third_event_start_time}|{third_event_end_time}",
-            #     ],
-            #     "question_level": "complex",
-            #     "question_type": "timeline_position_retrieval*3",
-            #     "answer_type": "relation_union_or_intersection",
-            #     "temporal_relation": "union",
-            # },
             {
                 "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
                 f"{second_event_predicate} {second_event_object} "

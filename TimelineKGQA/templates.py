@@ -156,10 +156,6 @@ QUESTION_TEMPLATES = {
                 "intersection": [
                     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object}, at the same time, {second_event_subject} {second_event_predicate} {second_event_object}?"
                 ],
-                # "union": [
-                #     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object} or {second_event_subject} {second_event_predicate} {second_event_object}?"
-                #     # From when to when, bush and obama are president? this type of question, this should be able to handled by the LLM when first_event_subject and second_event_subject are the same
-                # ],
             },
             # we are looking for the allen temporal relation between the two events, so the question normally is asked for relation directly, or true/false question.
             # However, it is still possible to have specific format for specific relationship question, even it is true/false question.
@@ -217,9 +213,6 @@ QUESTION_TEMPLATES = {
                 "intersection": [
                     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object}, at the same time, {second_event_subject} {second_event_predicate} {second_event_object}, at the same time, {third_event_subject} {third_event_predicate} {third_event_object}?"
                 ],
-                # "union": [
-                #     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object} or {second_event_subject} {second_event_predicate} {second_event_object} or {third_event_subject} {third_event_predicate} {third_event_object}?"
-                # ],
             },
             # TODO: this is not really make sense, so we ignore it here
             "relation_duration": {
