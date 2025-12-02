@@ -231,10 +231,10 @@ QUESTION_TEMPLATES = {
             },
             "relation_ranking": {
                 "rank_start_time": [
-                    "{first_event_subject} is ranking what based on the start time among {first_event_subject} {first_event_predicate} {first_event_object}, {second_event_subject} {second_event_predicate} {second_event_object} and {third_event_subject} {third_event_predicate} {third_event_object}?"
+                    "What is the rank of {first_event_subject} based on start time among {first_event_subject} {first_event_predicate} {first_event_object}, {second_event_subject} {second_event_predicate} {second_event_object} and {third_event_subject} {third_event_predicate} {third_event_object}?"
                 ],
                 "rank_end_time": [
-                    "{first_event_subject} is ranking what based on the end time among {first_event_subject} {first_event_predicate} {first_event_object}, {second_event_subject} {second_event_predicate} {second_event_object} and {third_event_subject} {third_event_predicate} {third_event_object}?"
+                    "What is the rank of {first_event_subject} based on end time among {first_event_subject} {first_event_predicate} {first_event_object}, {second_event_subject} {second_event_predicate} {second_event_object} and {third_event_subject} {third_event_predicate} {third_event_object}?"
                 ],
             },
         },
