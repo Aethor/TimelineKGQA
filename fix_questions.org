@@ -106,7 +106,7 @@ set(get_question_category(row) for _, row in df.iterrows() if not row["question_
 #+end_src
 
 #+RESULTS:
-: {('medium', 'timeline_recovery_temporal_constrainted_retrieval', 'subject'), ('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_duration'), ('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_duration'), ('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'object'), ('medium', 'timeline_recovery_temporal_constrainted_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_ranking'), ('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_union_or_intersection'), ('medium', 'timeline_recovery_timeline_recovery', 'relation_union_or_intersection'), ('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_union_or_intersection'), ('medium', 'timeline_recovery_timeline_recovery', 'relation_duration'), ('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'subject'), ('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'subject'), ('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'subject')}
+: {('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'subject'), ('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_union_or_intersection'), ('complex', 'timeline_position_retrieval*3', 'relation_ranking'), ('complex', 'timeline_position_retrieval*3', 'relation_duration'), ('medium', 'timeline_position_retrieval_timeline_position_retrieval', 'relation_duration'), ('medium', 'timeline_recovery_temporal_constrainted_retrieval', 'object'), ('medium', 'timeline_recovery_timeline_recovery', 'relation_union_or_intersection'), ('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'object'), ('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'object'), ('complex', 'timeline_position_retrieval*3', 'relation_union_or_intersection'), ('medium', 'timeline_recovery_temporal_constrainted_retrieval', 'subject'), ('complex', 'timeline_position_retrievel*2+temporal_constrainted_retrieval', 'object'), ('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'subject'), ('complex', 'timeline_position_retrieval*2+temporal_constrained_retrieval', 'subject'), ('medium', 'timeline_recovery_timeline_recovery', 'relation_duration')}
 
 ** =('medium', 'timeline_position_retrieval_temporal_constrained_retrieval', 'object')=
 
@@ -511,7 +511,7 @@ We modify the template like so:
 question = get_question_of_category(
     "medium", "timeline_position_retrieval_temporal_constrained_retrieval", "subject", i=4
 )
-(question["question"], question["answer"])
+(question["question"], question["answer"], question["temporal_relation"])
 #+end_src
 
 #+RESULTS:
@@ -519,14 +519,17 @@ question = get_question_of_category(
 :  "'X > Y', 'description': 'X is after Y', 'category': 'tr&tp', 'code': "
 :  "'trtp-23', 'semantic': 'after'} Richard Wood, Baron Holderness position held "
 :  'Member of the 46th Parliament of the United Kingdom?',
-:  'Kristiina Ojuland')
+:  'Kristiina Ojuland',
+:  'duration_after')
 
-#+begin_src python
+#+begin_src python :results pp
 question["paraphrased_question"]
 #+end_src
 
 #+RESULTS:
-: Who was a member of the European Parliament after Richard Wood, Baron Holderness, served as a Member of the 46th Parliament of the United Kingdom?
+: ('Who was a member of the European Parliament after Richard Wood, Baron '
+:  'Holderness, served as a Member of the 46th Parliament of the United Kingdom?')
+
 
 Apparently the question has some structured data inside, which must
 not be good for paraphrasing.

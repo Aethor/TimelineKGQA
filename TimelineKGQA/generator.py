@@ -978,7 +978,7 @@ class TKGQAGenerator:
                                 first_event_subject=first_event_subject,
                                 first_event_predicate=first_event_predicate,
                                 first_event_object=first_event_object,
-                                temporal_relation=f"{duration} {temporal_relation}",
+                                temporal_relation=f"{duration} {temporal_relation_semantic}",
                                 second_event_subject=second_event_subject,
                                 second_event_predicate=second_event_predicate,
                                 second_event_object=second_event_object,
