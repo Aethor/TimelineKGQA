@@ -52,7 +52,6 @@ class ICEWSDataLoader:
         """
 
         if self.data_type == "all" or self.data_type == "icews":
-
             # loop the folder, and unzip all the files ending with .zip
             # it will override the data if it is running twice
             for file in os.listdir(DATA_ICEWS_EVENTS_DATA_DIR):
@@ -705,7 +704,7 @@ if __name__ == "__main__":
         "--db_connection_str",
         type=str,
         help="Database connection string",
-        default="postgresql://pascal:homepc@0.tcp.au.ngrok.io:18687/timelinekgqa",
+        default="postgresql://tkgqa:tkgqa@127.0.0.1:5433/tkgqa",
     )
     # parse the arguments
     args = parser.parse_args()

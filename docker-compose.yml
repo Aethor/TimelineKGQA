@@ -17,4 +17,3 @@ services:
 
 volumes:
   tkgqa_generator_postgis_data:
-    external: true
