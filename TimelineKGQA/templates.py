@@ -202,7 +202,7 @@ QUESTION_TEMPLATES = {
     "complex": {
         "timeline_position_retrieval*2+temporal_constrained_retrieval": {
             "subject": [
-                "Who {first_event_subject} {first_event_object}, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate}, {third_event_object}?",
+                "Who {first_event_subject} {first_event_predicate} {first_event_object}, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate}, {third_event_object}?",
             ],
             "object": [
                 "{first_event_subject} {first_event_predicate} which organisation/what/who, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate} {third_event_object}?",
