@@ -2743,8 +2743,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--paraphrased",
-        type=bool,
-        default=False,
+        action=argparse.BooleanOptionalAction,
         help="The flag to indicate if the question is paraphrased",
     )
 
