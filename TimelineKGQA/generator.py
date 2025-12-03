@@ -8,11 +8,9 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from tqdm import tqdm
+from openai import OpenAI
 
-from TimelineKGQA.openai_utils import (
-    paraphrase_medium_question,
-    paraphrase_simple_question,
-)
+from TimelineKGQA.openai_utils import paraphrase_question
 from TimelineKGQA.templates import QUESTION_TEMPLATES
 from TimelineKGQA.utils import get_logger, timer
 
@@ -325,6 +323,8 @@ class TKGQAGenerator:
         first_draw_size: int = 100,
         paraphrased: bool = False,
         bulk_sql_size: int = 100,
+        client: OpenAI | None = None,
+        model_name: str | None = None,
     ):
         # set up the db connection
         self.host = host
@@ -379,6 +379,9 @@ class TKGQAGenerator:
         self.sample_simple_events = []
         self.sample_medium_events = []
         self.sample_complex_events = []
+
+        self.client = client
+        self.model_name = model_name
 
     def simple_question_generation(self):
         """
@@ -451,6 +454,8 @@ class TKGQAGenerator:
                 end_time=event["end_time"],
                 template_based=True,
                 paraphrased=self.paraphrased,
+                client=self.client,
+                model_name=self.model_name,
             )
 
             # insert each qa into the table, have a flat table
@@ -485,6 +490,8 @@ class TKGQAGenerator:
         end_time: str,
         template_based: bool = False,
         paraphrased: bool = False,
+        client: OpenAI | None = None,
+        model_name: str | None = None,
     ) -> List[dict]:
         """
         This will try to generate four questions belong to RE type
@@ -506,6 +513,8 @@ class TKGQAGenerator:
             template_based (bool): Whether you use the template based question generation
             paraphrased (bool): Whether you do the paraphrase for the question, if set to False,
                     then the paraphrased_question will be the same as the question
+            client (OpenAI | None): OpenAI client. Must be set if paraphrased is True.
+            model_name (str | None): model name. Must be set if paraphrased is True.
 
         Returns:
             dict: The generated questions
@@ -605,9 +614,11 @@ class TKGQAGenerator:
                 )
 
         if paraphrased:
+            assert not client is None
+            assert not model_name is None
             for question_obj in questions:
-                paraphrased_question = paraphrase_simple_question(
-                    question=question_obj["question"]
+                paraphrased_question = paraphrase_question(
+                    question_obj, client, model_name
                 )
                 logger.info(f"paraphrased_question: {paraphrased_question}")
                 question_obj["paraphrased_question"] = paraphrased_question
@@ -653,6 +664,8 @@ class TKGQAGenerator:
                 second_event=second_event.to_dict(),
                 template_based=True,
                 paraphrased=self.paraphrased,
+                client=self.client,
+                model_name=self.model_name,
             )
 
             for question_obj in questions:
@@ -682,6 +695,8 @@ class TKGQAGenerator:
         second_event: dict,
         template_based: bool = True,
         paraphrased: bool = False,
+        client: OpenAI | None = None,
+        model_name: str | None = None,
     ) -> List[dict]:
         """
 
@@ -691,6 +706,8 @@ class TKGQAGenerator:
             template_based (bool): Whether you use the template based question generation
             paraphrased (bool): Whether you do the paraphrase for the question, if set to False,
                     then the paraphrased_question will be the same as the question
+            client (OpenAI | None): OpenAI client. Must be set if paraphrased is True.
+            model_name (str | None): model name. Must be set if paraphrased is True.
 
         Returns:
             dict: The generated questions
@@ -931,8 +948,8 @@ class TKGQAGenerator:
                             second_event_end_time_dt,
                         ],
                     )
-                    temporal_relation_semantic = temporal_relation.get("semantic")
-                    question_draft["temporal_relation"] = temporal_relation["relation"]
+                    temporal_relation_semantic = temporal_relation["semantic"]
+                    question_draft["temporal_relation"] = temporal_relation_semantic
                     random_pick_template = random.choice(
                         this_type_templates[temporal_relation_semantic]
                     )
@@ -1187,9 +1204,11 @@ class TKGQAGenerator:
 
         questions += medium_type_1_b_questions
         if paraphrased:
+            assert not client is None
+            assert not model_name is None
             for question_obj in questions:
-                paraphrased_question = paraphrase_medium_question(
-                    question=question_obj["question"],
+                paraphrased_question = paraphrase_question(
+                    question_obj, client, model_name
                 )
                 logger.info(f"paraphrased_question: {paraphrased_question}")
                 question_obj["paraphrased_question"] = paraphrased_question
@@ -1224,6 +1243,8 @@ class TKGQAGenerator:
                 third_event=third_event.to_dict(),
                 template_based=True,
                 paraphrased=self.paraphrased,
+                client=self.client,
+                model_name=self.model_name,
             )
             for question_obj in questions:
                 question_obj["source_kg_id"] = int(source_kg_id)
@@ -1254,6 +1275,8 @@ class TKGQAGenerator:
         third_event: dict,
         template_based: bool = True,
         paraphrased: bool = True,
+        client: OpenAI | None = None,
+        model_name: str | None = None,
     ) -> List[dict]:
         """
         Args:
@@ -1263,6 +1286,8 @@ class TKGQAGenerator:
             template_based (bool): Whether you use the template based question generation
             paraphrased (bool): Whether you do the paraphrase for the question, if set to False,
                     then the paraphrased_question will be the same as the question
+            client (OpenAI | None): OpenAI client. Must be set if paraphrased is True.
+            model_name (str | None): model name. Must be set if paraphrased is True.
 
         Returns:
             dict: The generated questions
@@ -1779,9 +1804,11 @@ class TKGQAGenerator:
 
         questions += complex_type_1_b_questions
         if paraphrased:
+            assert not client is None
+            assert not model_name is None
             for question_obj in questions:
-                paraphrased_question = paraphrase_medium_question(
-                    question=question_obj["question"],
+                paraphrased_question = paraphrase_question(
+                    question_obj, client, model_name
                 )
                 logger.info(f"paraphrased_question: {paraphrased_question}")
                 question_obj["paraphrased_question"] = paraphrased_question
@@ -2754,6 +2781,10 @@ if __name__ == "__main__":
         help="The bulk sql size for the insert",
     )
 
+    parser.add_argument("-u", "--client_base_url", type=str, default=None)
+    parser.add_argument("-k", "--client_api_key", type=str, default=None)
+    parser.add_argument("-m", "--model_name", type=str, default="gpt-4o")
+
     # sampling the events strategy
     parser.add_argument(
         "--sample_strategy",
@@ -2771,6 +2802,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    client = None
+    if args.paraphrased:
+        client = OpenAI(base_url=args.client_base_url, api_key=args.client_api_key)
     generator = TKGQAGenerator(
         table_name=args.table_name,
         host=args.host,
@@ -2780,6 +2814,8 @@ if __name__ == "__main__":
         db_name=args.db_name,
         first_draw_size=1000,
         paraphrased=args.paraphrased,
+        client=client,
+        model_name=args.model_name,
         bulk_sql_size=args.bulk_sql_size,
     )
     """

@@ -10,24 +10,27 @@ import pandas as pd
 import psycopg2
 from loguru import logger
 from tqdm import tqdm
+from openai import OpenAI
 
-from TimelineKGQA.openai_utils import (
-    paraphrase_medium_question,
-    paraphrase_simple_question,
-)
+from TimelineKGQA.openai_utils import paraphrase_question
 from TimelineKGQA.constants import DATA_DIR
 
 
 class Paraphraser:
     def __init__(
-            self,
-            table_name: str,
-            host: str = "localhost",
-            port: int = 5433,
-            database: str = "tkgqa",
-            user: str = "tkgqa",
-            password: str = "tkgqa",
+        self,
+        openai_client: OpenAI,
+        model_name: str,
+        table_name: str,
+        host: str = "localhost",
+        port: int = 5433,
+        database: str = "tkgqa",
+        user: str = "tkgqa",
+        password: str = "tkgqa",
     ):
+        self.openai_client = openai_client
+        self.model_name = model_name
+
         self.table_name = table_name
         self.host = host
         self.port = port
@@ -53,16 +56,9 @@ class Paraphraser:
 
         # Paraphrase questions using OpenAI's GPT-4o model
         for i, row in tqdm(questions.iterrows(), total=len(questions)):
-            question = row["question"]
-            level = row["question_level"]
-            if level == "simple":
-                paraphrased_question = paraphrase_simple_question(question)
-            elif level == "medium":
-                paraphrased_question = paraphrase_medium_question(question)
-            elif level == "complex":
-                paraphrased_question = paraphrase_medium_question(question)
-            else:
-                raise ValueError(level)
+            paraphrased_question = paraphrase_question(
+                row, self.openai_client, self.model_name
+            )
 
             # update the paraphrased question in the database
             self.cursor.execute(
@@ -83,7 +79,9 @@ class Paraphraser:
         )
         logger.info(kg_cron_question_df.shape)
         kg_cron_question_df.to_csv(DATA_DIR / f"{self.table_name}.csv", index=False)
-        kg_cron_question_df.to_json(DATA_DIR / f"{self.table_name}.json", orient="records")
+        kg_cron_question_df.to_json(
+            DATA_DIR / f"{self.table_name}.json", orient="records"
+        )
 
         # Read the whole table and export it to CSV
         logger.info("Exporting the whole table to CSV")
@@ -100,16 +98,24 @@ class Paraphraser:
         kg_df.to_csv(DATA_DIR / f"{table_name}.csv", index=False)
         kg_df.to_json(DATA_DIR / f"{table_name}.json", orient="records")
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Paraphrase questions using OpenAI's GPT-4o model."
     )
+    parser.add_argument("-u", "--client_base_url", type=str, default=None)
+    parser.add_argument("-k", "--client_api_key", type=str, default=None)
+    parser.add_argument("-m", "--model_name", type=str, default="gpt-4o")
     parser.add_argument(
-        "table_name", type=str, help="Name of the table containing the questions."
+        "-t",
+        "--table_name",
+        type=str,
+        help="Name of the table containing the questions.",
     )
     args = parser.parse_args()
 
-    paraphraser = Paraphraser(args.table_name)
+    client = OpenAI(base_url=args.client_base_url, api_key=args.client_api_key)
+    paraphraser = Paraphraser(client, args.model_name, args.table_name)
     paraphraser.run()
     paraphraser.export()
 

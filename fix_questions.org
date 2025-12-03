@@ -433,7 +433,8 @@ question = get_question_of_category(
 :  'To, Elite (India)?',
 :  'Alejandro Encinas Rodríguez')
 
-It seems that the predicate is missing here, so we should add it back to the template.
+It seems that the predicate was subsituted for the subject here, so we
+should add it back to the template.
 
 [[file:TimelineKGQA/templates.py::"timeline_position_retrieval*2+temporal_constrained_retrieval": {]]
 
@@ -608,7 +609,7 @@ question = get_question_of_category(
 - questions with a temporal relation of ="union"= should be deleted,
   as their natural language formulation is challenging and easily
   ambiguous.
-- The predicate is missing from a template
+- A predicate has been substitued for the subject in a template
   [[file:TimelineKGQA/templates.py::"timeline_position_retrieval*2+temporal_constrained_retrieval":
   {]]
 - The ranking template can be improved in terms of english
@@ -809,3 +810,17 @@ paraphrase
 : ('What is the combined length of Gianvito Plasmati’s time as a member of '
 :  'Atalanta B.C. and the period Charles Guggenheim’s Academy Award-winning '
 :  'documentary was recognized?')
+
+** Additional issues
+
+We discovered additional question issues while writing paraphrasing
+examples:
+
+- Questions where the temporal relation is "equal" are often on
+  timepoints rather than intervals "Who award received Grand Cross of
+  the Order of Civil Merit, at the same time NBA All-Star Game Most
+  Valuable Player Award winner Shaquille O'Neal?"
+- Some facts are of the form (SomeEvent, significantEvent,
+  Occurrence). This can easily break templates!
+- The template for question with an =answer_type= of relation_allen
+  could be improved.
