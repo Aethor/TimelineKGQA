@@ -41,8 +41,7 @@ python3 -m TimelineKGQA.data_loader.load_icews --mode actor_unified_kg
 
 # this will generate the question answering pairs
 export OPENAI_API_KEY=sk-proj-xxx
-python3 -m TimelineKGQA.generator --paraphrase True
-
+python3 -m TimelineKGQA.generator --paraphrased
 ```
 
 ## Folder Structure
