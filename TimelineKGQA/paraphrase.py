@@ -67,7 +67,7 @@ class Paraphraser:
             )
             self.connection.commit()
             logger.info(
-                f"Paraphrased question {row['id']}: {question} -> {paraphrased_question}"
+                f"Paraphrased question {row['id']}: {row['question']} -> {paraphrased_question}"
             )
 
     def export(self):
