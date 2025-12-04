@@ -424,7 +424,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 # duration for the intersection of the two events
                 "duration": (
                     "What is the duration of Tim Bishop position held United States representative jointly when Gianluca Zanetti member of sports team A.C. Cesena?",
-                    "During Gianluca Zanetti's tenure as a member of A.C. Cesena, how long did Tim Bishop serve as a United States representative concurrently?",
+                    "How long did Tim Bishop serve as a United States representative while Gianluca Zanetti's was a member of A.C. Cesena?",
                 ),
                 "duration_compare": (
                     "Is the duration of United States Seventh Fleet director/manager Robert F. Willard shorter the duration of Katrín Jakobsdóttir position held Member of the 2013-2016 Parliament of Iceland?",
