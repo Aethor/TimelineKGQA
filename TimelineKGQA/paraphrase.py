@@ -54,7 +54,7 @@ class Paraphraser:
             con=self.connection,
         )
 
-        # Paraphrase questions using OpenAI's GPT-4o model
+        # Paraphrase questions using an LLM
         for i, row in tqdm(questions.iterrows(), total=len(questions)):
             paraphrased_question = paraphrase_question(
                 row, self.openai_client, self.model_name
@@ -100,9 +100,7 @@ class Paraphraser:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Paraphrase questions using OpenAI's GPT-4o model."
-    )
+    parser = argparse.ArgumentParser(description="Paraphrase questions using any LLM.")
     parser.add_argument("-u", "--client_base_url", type=str, default=None)
     parser.add_argument("-k", "--client_api_key", type=str, default=None)
     parser.add_argument("-m", "--model_name", type=str, default="gpt-4o")
