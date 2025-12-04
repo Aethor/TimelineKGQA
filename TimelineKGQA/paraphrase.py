@@ -107,6 +107,36 @@ def main():
     parser.add_argument("-k", "--client_api_key", type=str, default=None)
     parser.add_argument("-m", "--model_name", type=str, default="gpt-4o")
     parser.add_argument(
+        "--host",
+        type=str,
+        default="localhost",
+        help="The host name for the database",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=5433,
+        help="The port number for the database",
+    )
+    parser.add_argument(
+        "--user",
+        type=str,
+        default="tkgqa",
+        help="The user name for the database",
+    )
+    parser.add_argument(
+        "--password",
+        type=str,
+        default="tkgqa",
+        help="The password for the database",
+    )
+    parser.add_argument(
+        "--db_name",
+        type=str,
+        default="tkgqa",
+        help="The database name for the database",
+    )
+    parser.add_argument(
         "-t",
         "--table_name",
         type=str,
@@ -115,7 +145,16 @@ def main():
     args = parser.parse_args()
 
     client = OpenAI(base_url=args.client_base_url, api_key=args.client_api_key)
-    paraphraser = Paraphraser(client, args.model_name, args.table_name)
+    paraphraser = Paraphraser(
+        client,
+        args.model_name,
+        args.table_name,
+        args.host,
+        args.port,
+        args.db_name,
+        args.user,
+        args.password,
+    )
     paraphraser.run()
     paraphraser.export()
 
