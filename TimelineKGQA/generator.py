@@ -1046,7 +1046,7 @@ class TKGQAGenerator:
                             ],
                         )
                         question_draft["temporal_relation"] = temporal_allen_relation[
-                            "relation"
+                            "semantic"
                         ]
                         # random select from [choices, true_false]
                         question_format = random.choice(["choice", "true_false"])
