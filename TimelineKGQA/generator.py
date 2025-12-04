@@ -2030,7 +2030,7 @@ class TKGQAGenerator:
             time_ranges, temporal_operator
         )
         if result is None:
-            return f"There are no {temporal_operator}s between these time intervals."
+            return f"There is no {temporal_operator} between these time intervals."
         return f"({result[0]}, {result[1]})"
 
     @staticmethod
