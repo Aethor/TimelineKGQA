@@ -949,7 +949,7 @@ class TKGQAGenerator:
                         ],
                     )
                     temporal_relation_semantic = temporal_relation["semantic"]
-                    question_draft["temporal_relation"] = temporal_relation_semantic
+                    question_draft["temporal_relation"] = temporal_relation["relation"]
                     random_pick_template = random.choice(
                         this_type_templates[temporal_relation_semantic]
                     )
@@ -1046,7 +1046,7 @@ class TKGQAGenerator:
                             ],
                         )
                         question_draft["temporal_relation"] = temporal_allen_relation[
-                            "semantic"
+                            "relation"
                         ]
                         # random select from [choices, true_false]
                         question_format = random.choice(["choice", "true_false"])

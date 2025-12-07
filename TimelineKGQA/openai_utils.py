@@ -2,7 +2,7 @@ from typing import Mapping
 
 from openai import OpenAI
 
-from TimelineKGQA.templates import QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES
+from TimelineKGQA.templates import get_paraphrase_examples
 from TimelineKGQA.utils import get_logger
 
 logger = get_logger(__name__)
@@ -34,11 +34,11 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
     """
     prompt_text = "Paraphrase the following question: '{}'".format(question["question"])
 
-    example = QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES[question["question_level"]][
-        question["question_type"]
-    ][question["answer_type"]]
-    if isinstance(example, dict):
-        example = example[question["temporal_relation"]]
+    examples = get_paraphrase_examples(question)
+    examples_str = []
+    for raw_question, paraphrase in examples:
+        examples_str.append(f"question: {raw_question}\nparaphrase: {paraphrase}\n")
+    examples_str = "\n".join(examples_str)
 
     try:
         # Some examples include:
@@ -59,15 +59,13 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
                     Do not add additional time indication in the question, it is a type of implicit temporal question.
                     Only output the paraphrase of the question and nothing else.
 
-                    Example:
-                    question: {}
-                    paraphrase: {} 
+                    Example(s):
+
                     """.format(
                         coarse_answer_type.get(
                             question["answer_type"], question["answer_type"]
                         ),
-                        example[0],
-                        example[1],
+                        examples_str,
                     ),
                 },
                 {

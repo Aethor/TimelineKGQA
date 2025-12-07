@@ -1,3 +1,5 @@
+from typing import Mapping
+
 # noqa: E501
 QUESTION_TEMPLATES = {
     "simple": {
@@ -275,46 +277,58 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
     "medium": {
         "timeline_position_retrieval_temporal_constrained_retrieval": {
             "subject": {
-                "before": (
+                "X < Y": (
                     "Prior to Friesland head of government Karin Evers-Meyer, Who/Which Organisation member of sports team England national under-21 football team?",
                     "Before Karin Evers-Meyer became the head of government in Friesland, who was a member of the England national under-21 football team?",
                 ),
-                "after": (
+                "X > Y": (
                     "After Gianluca Lamacchi member of sports team Genoa Cricket and Football Club, who member of sports team Como 1907?",
                     "After Gianluca Lamacchi was a member of the Genoa Cricket and Football Club team, who was a member of the Como 1907 team?",
                 ),
-                "during": (
+                "X o Y": (
                     "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
                     "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
                 ),
-                "meets": (
+                "X di Y": (
+                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
+                    "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
+                ),
+                "X d Y": (
+                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
+                    "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
+                ),
+                "X oi Y": (
+                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
+                    "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
+                ),
+                "X m Y": (
                     # This means first end time = second start time
                     "When Rob Andrews starts position held United States representative, who ends member of sports team Como 1907?",
                     "When Rob Andrews began his role as a United States representative, who left the sports team Como 1907?",
                 ),
-                "metby": (
+                "X mi Y": (
                     # This means first start time = second end time
                     "When Elizabeth Amann ends employer Columbia University, who starts member of sports team Brighton & Hove Albion F.C.?",
                     "When Elizabeth Amann ended her employment at Columbia University, who became a member of Brighton & Hove Albion F.C.?",
                 ),
-                "starts": (  # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
+                "X s Y": (  # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
                     "At the same time Charles Williams start position held Member of the 37th Parliament of the United Kingdom, who starts member of sports team Italy national football team?",
                     "When Charles Williams began his term as a Member of the 37th Parliament of the United Kingdom, who became a member of the Italy national football team?",
                 ),
-                "startedby": (  # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
+                "X si Y": (  # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
                     "At the same time Fran Walsh start award received Nebula Award for Best Script, who starts member of sports team Unione Calcio Sampdoria?",
                     "When Fran Walsh received the Nebula Award for Best Script, who became a member of the Unione Calcio Sampdoria sports team?",
                 ),
-                "finishes": (  # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
+                "X f Y": (  # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
                     "Who finishes member of sports team Oldham Athletic A.F.C., at the same time Nadine Müller finish country of citizenship German Democratic Republic?",
                     "Who concluded their membership with the sports team Oldham Athletic A.F.C. at the time when Nadine Müller ceased to be a citizen of the German Democratic Republic?",
                 ),
-                "finishedby": (
+                "X fi Y": (
                     # This means first and second finish at the same time, however, the start time of the first event is before the start time of the second event
                     "Who finishes position held United States senator, at the same time Josh Rees finish member of sports team Brentford F.C.?",
                     "Who ended their tenure as a United States senator when Josh Rees ended his time as a member of Brentford F.C.?",
                 ),
-                "equal": (
+                "X = Y": (
                     # This means first and second start and end at the same time
                     "Who position held United States representative at the same start and end time Jeff Whitley start and end member of sports team Sunderland A.F.C.?",
                     "Who started and ended holding the position of United States representative at the same time as the arrival and departure of Jeff Whitley as a member of Sunderland A.F.C.?",
@@ -329,49 +343,61 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 ),
             },
             "object": {
-                "before": (
+                "X < Y": (
                     "Who/What/Which organisation is member of sports teamed by Hal Robson-Kanu before Mike Thompson position held United States representative?",
                     "Before Mike Thompson held the position of United States representative, who is a member of a sports team that included Hal Robson-Kanu as a member?",
                 ),
-                "after": (
+                "X > Y": (
                     "Who/What/Which organisation is award receiveded by Harry Bolton Seed after Nikolay Rukavishnikov award received Order of Sukhbaatar?",
                     "After Nikolay Rukavishnikov received the Order of Sukhbaatar, what award was awarded Harry Bolton Seed?",
                 ),
-                "during": (
+                "X d Y": (
                     "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
                     "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
                 ),
-                "meets": (
+                "X di Y": (
+                    "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
+                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
+                ),
+                "X o Y": (
+                    "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
+                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
+                ),
+                "X oi Y": (
+                    "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
+                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
+                ),
+                "X m Y": (
                     # This means first end time = second start time, this question is asking for the first object
                     "Rob Andrews starts position held United States representative at the same time Dan Twardzik ends member of sports team with who/what/which organisation?",
                     "When Rob Andrews begins his role as a United States representative, which sports team does Dan Twardzik leave?",
                 ),
-                "metby": (
+                "X mi Y": (
                     # This means first start time = second end time, this question is asking for the first object
                     "Mike McIntyre ends position held United States representative at the same time Rob Andrews starts position held with who/what/which organisation?",
                     "As Mike McIntyre finishes his tenure as a United States representative, Which organization does Rob Andrews begin working for?",
                 ),
-                "starts": (
+                "X s Y": (
                     # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
                     "At the same time Bärbel Höhn start position held member of the German Bundestag, in which organisation/what/who Gianvito Plasmati starts member of sports team?",
                     "When Bärbel Höhn began her role as a member of the German Bundestag, which sports team did Gianvito Plasmati join?",
                 ),
-                "startedby": (
+                "X si Y": (
                     # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
                     "At the same time Micky Holmes start member of sports team Northampton Town F.C., in which organisation/who/what Olivier Dassault starts position held?",
                     "When Micky Holmes became a member of Northampton Town F.C., with which organization did Olivier Dassault begin his position?",
                 ),
-                "finishes": (
+                "X f Y": (
                     # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
                     "At the same time Noël Mamère finish position held member of the French National Assembly, in which organisation/who/what John Katko finishes position held?",
                     "When Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko leave?",
                 ),
-                "finishedby": (
+                "X fi Y": (
                     # This means first and second finish at the same time, however, the start time of the first event is before the start time of the second event
                     "At the same time Ruud Gullit finish member of sports team A.C. Milan, in which organisation Alberto Malusci finishes member of sports team",
                     "When Ruud Gullit ended his time with A.C. Milan, which sports team did Alberto Malusci leave?",
                 ),
-                "equal": (
+                "X = Y": (
                     # This means first and second start and end at the same time
                     "At the same time Peter Mandelson position held Secretary of State for Business, Energy and Industrial Strategy, in which organisation/who/what Robinho member of sports team?",
                     "At the same time as Mandelson was serving as the Secretary of State for Business, Energy and Industrial Strategy, which sports team was Robinho a member of?",
@@ -444,14 +470,51 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
     },
     "complex": {
         "timeline_position_retrieval*2+temporal_constrained_retrieval": {
-            "subject": (
-                "Who member of sports team Luton Town F.C., after Vladimír Mlynář position held editor-in-chief, after Sofie Ribbing work location, The Hague?",
-                "Who was a member of the sports team Luton Town F.C., after Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
-            ),
-            "object": (
-                "Adalbert Schnee military rank who/what/which organisation, before Gerhard Hager position held member of the European Parliament, before k.d. lang nominated for Juno Award for Single of the Year?",
-                "In which organization did Adalbert Schnee hold a military rank, before Gerhard Hager was a member of the European Parliament and before k.d. lang was nominated for the Juno Award for Single of the Year?",
-            ),
+            "subject": {
+                "X < Y&X > Y": (
+                    "Who member of sports team Luton Town F.C., before Vladimír Mlynář position held editor-in-chief, after Sofie Ribbing work location, The Hague?",
+                    "Who was a member of the sports team Luton Town F.C., before Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                ),
+                "X m Y&X mi Y": (
+                    "Who member of sports team Luton Town F.C., meets Vladimír Mlynář position held editor-in-chief, metBy Sofie Ribbing work location, The Hague?",
+                    "Who left team Luton Town F.C., at the same time as Vladimír Mlynář started as an editor-in-chief and joined team Luton Town F.C as Sofie Ribbing stopped working in The Hague?",
+                ),
+                "X o Y&X oi Y": (
+                    "Who member of sports team Luton Town F.C., during Vladimír Mlynář position held editor-in-chief, during Sofie Ribbing work location, The Hague?",
+                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                ),
+                "X s Y&X si Y": (
+                    "Who member of sports team Luton Town F.C., starts Vladimír Mlynář position held editor-in-chief, startedBy Sofie Ribbing work location, The Hague?",
+                    "Who joined team Luton Town F.C., at the same time as Vladimír Mlynář started as an editor-in-chief and Sofie Ribbing started working in The Hague?",
+                ),
+                "X d Y&X di Y": (
+                    "Who member of sports team Luton Town F.C., during Vladimír Mlynář position held editor-in-chief, during Sofie Ribbing work location, The Hague?",
+                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                ),
+                "X f Y&X fi Y": (
+                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                    "Who left team Luton Town F.C. at the same time as Vladimír Mlynář left his position as an editor-in-chief and Sofie Ribbing finished working in The Hague?",
+                ),
+                "X = Y&X = Y": (
+                    "Who member of sports team Luton Town F.C., equal Vladimír Mlynář position held editor-in-chief, equal Sofie Ribbing work location, The Hague?",
+                    "Who joined and left Luton Town F.C., at the same time as Vladimír Mlynář started and ended his position as an editor-in-chief, and Sofie Ribbing started and ended working in The Hague?",
+                ),
+            },
+            "object": {
+                "X < Y&X > Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, before Gerhard Hager position held member of the European Parliament, after Sofie Ribbing work location, The Hague?",
+                    "In which organization did Adalbert Schnee hold a military rank, before Gerhard Hager was a member of the European Parliament and after Sofie Ribbing ended working in The Hague?",
+                ),
+                "X m Y&X mi Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, meets Gerhard Hager position held member of the European Parliament, metBy Sofie Ribbing work location, The Hague?",
+                    "In which organization did Adalbert Schnee start to hold a military rank, at the same time as Gerhard Hager started being a member of the European Parliament, and ended holding that rank at the same time as Sofie Ribbing started working in The Hague?",
+                ),
+                "X o Y&X oi Y": (),
+                "X s Y&X si Y": (),
+                "X d Y&X di Y": (),
+                "X fi Y&X fi Y": (),
+                "X = Y&X = Y": (),
+            },
         },
         "timeline_position_retrieval*3": {
             "relation_union_or_intersection": {
@@ -460,7 +523,6 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "From when to when did Clarence Godber Burton held the position of councillor while Cyril Svoboda was a member of the Chamber of Deputies of the Parliament of the Czech Republic and the 1978 Colgate International event occured?",
                 ),
             },
-            # TODO: this is not really make sense, so we ignore it here
             "relation_duration": {
                 "duration": (
                     "What is the duration of George Nicoll Barnes position held Member of the 29th Parliament of the United Kingdom jointly when Walther Hermann Nernst nominated for Nobel Prize in Chemistry and Paul Karrer nominated for Nobel Prize in Chemistry?",
@@ -492,3 +554,12 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
         },
     },
 }
+
+
+def get_paraphrase_examples(question: Mapping) -> list[tuple[str, str]]:
+    example = QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES[question["question_level"]][
+        question["question_type"]
+    ][question["answer_type"]]
+    if isinstance(example, dict):
+        example = example[question["temporal_relation"]]
+    return [example]
