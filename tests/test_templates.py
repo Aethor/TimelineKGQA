@@ -104,3 +104,27 @@ def test_get_paraphrase_examples_no_combination(
         }
     )
     assert len(examples) == 1
+
+
+@pytest.mark.parametrize(
+    "temporal_relation",
+    [
+        ("duration_3883 days before&duration_starts"),
+        ("duration_3883 days after&duration_startedby"),
+        ("duration_during&duration_2348 days before"),
+        ("duration_overlaps&duration_2348 days before"),
+        ("duration_finishes&duration_1713 days after"),
+        ("duration_finishedby&duration_1713 days after"),
+    ],
+)
+def test_get_paraphrase_complex_duration(temporal_relation: str):
+    for answer_type in ["subject", "object"]:
+        examples = get_paraphrase_examples(
+            {
+                "question_level": "complex",
+                "question_type": "timeline_position_retrieval*2+temporal_constrained_retrieval",
+                "answer_type": answer_type,
+                "temporal_relation": temporal_relation,
+            }
+        )
+        assert len(examples) == 2

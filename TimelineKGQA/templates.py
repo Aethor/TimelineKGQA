@@ -477,7 +477,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "Who was a member of the sports team Luton Town F.C., before Vladimír Mlynář held the position of editor-in-chief and after Sofie Ribbing worked in The Hague?",
                 ),
                 "X m Y&X mi Y": (
-                    "Who member of sports team Luton Town F.C., meets Vladimír Mlynář position held editor-in-chief, metBy Sofie Ribbing work location, The Hague?",
+                    "Who member of sports team Luton Town F.C., meets Vladimír Mlynář position held editor-in-chief, metby Sofie Ribbing work location, The Hague?",
                     "Who left team Luton Town F.C., at the same time as Vladimír Mlynář started as an editor-in-chief and joined team Luton Town F.C as Sofie Ribbing stopped working in The Hague?",
                 ),
                 "X o Y&X oi Y": (
@@ -485,7 +485,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
                 ),
                 "X s Y&X si Y": (
-                    "Who member of sports team Luton Town F.C., starts Vladimír Mlynář position held editor-in-chief, startedBy Sofie Ribbing work location, The Hague?",
+                    "Who member of sports team Luton Town F.C., starts Vladimír Mlynář position held editor-in-chief, startedby Sofie Ribbing work location, The Hague?",
                     "Who joined team Luton Town F.C., at the same time as Vladimír Mlynář started as an editor-in-chief and Sofie Ribbing started working in The Hague?",
                 ),
                 "X d Y&X di Y": (
@@ -500,6 +500,10 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "Who member of sports team Luton Town F.C., equal Vladimír Mlynář position held editor-in-chief, equal Sofie Ribbing work location, The Hague?",
                     "Who joined and left Luton Town F.C., at the same time as Vladimír Mlynář started and ended his position as an editor-in-chief, and Sofie Ribbing started and ended working in The Hague?",
                 ),
+                "duration_N(after|before)&duration_N(after|before)": (
+                    "Who Affiliation To Finance / Economy / Commerce / Trade Ministry (Laos), 2302 days after Lawrence Gonzi Affiliation To Commonwealth of Nations, 1356 days after Algirdas Mykolas Brazauskas Affiliation To Social Democratic Party of Lithuania?",
+                    "Who was affiliated to the Finance / Economy / Commerce / Trade Ministry (Laos), 2302 days after Lawrence Gonzi was affiliated to the Commonwealth of Nations, and 1356 days before Algirdas Mykolas Brazauskas was affiliated to the Social Democratic Party of Lithuania?",
+                ),
             },
             "object": {
                 "X < Y&X > Y": (
@@ -507,7 +511,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "In which organisation did Adalbert Schnee hold a military rank, before Gerhard Hager was a member of the European Parliament and after Sofie Ribbing ended working in The Hague?",
                 ),
                 "X m Y&X mi Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, meets Gerhard Hager position held member of the European Parliament, metBy Sofie Ribbing work location The Hague?",
+                    "Adalbert Schnee military rank who/what/which organisation, meets Gerhard Hager position held member of the European Parliament, metby Sofie Ribbing work location The Hague?",
                     "In which organisation did Adalbert Schnee start to hold a military rank at the same time as Gerhard Hager started being a member of the European Parliament, and ended holding that rank at the same time as Sofie Ribbing started working in The Hague?",
                 ),
                 "X o Y&X oi Y": (
@@ -515,7 +519,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "In which organisation did Adalbert Schnee hold a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
                 ),
                 "X s Y&X si Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, starts Gerhard Hager position held member of the European Parliament, startedBy Sofie Ribbing work location The Hague?",
+                    "Adalbert Schnee military rank who/what/which organisation, starts Gerhard Hager position held member of the European Parliament, startedby Sofie Ribbing work location The Hague?",
                     "In which organisation did Adalbert Schnee start to hold a military rank, at the same time as Gerhard Hager started being a member of the European Parliament and Sofie Ribbing started working in The Hague?",
                 ),
                 "X d Y&X di Y": (
@@ -523,12 +527,16 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "In which organisation did Adalbert Schnee hold a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
                 ),
                 "X f Y&X fi Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, finishes Gerhard Hager position held member of the European Parliament, finishedBy Sofie Ribbing work location, The Hague?",
+                    "Adalbert Schnee military rank who/what/which organisation, finishes Gerhard Hager position held member of the European Parliament, finishedby Sofie Ribbing work location, The Hague?",
                     "In which organisation did Adalbert Schnee stop holding a military rank, at the same time as Gerhard Hager stopped being a member of the European Parliament and Sofie Ribbing stopped working in The Hague?",
                 ),
                 "X = Y&X = Y": (
                     "Adalbert Schnee military rank who/what/which organisation, equal Gerhard Hager position held member of the European Parliament, equal Sofie Ribbing work location The Hague?",
                     "In which organisation did Adalbert Schnee start and end holding a military rank, at the same time as Gerhard Hager started and stopped being a member of the European Parliament and Sofie Ribbing started and stopped working in The Hague?",
+                ),
+                "duration_N(after|before)&duration_N(after|before)": (
+                    "Lien Thikeo Affiliation To which organisation/what/who, 2302 days after Lawrence Gonzi Affiliation To Commonwealth of Nations, 1356 days after Algirdas Mykolas Brazauskas Affiliation To Social Democratic Party of Lithuania?",
+                    "To which organization was Lien Thikeo affiliated, 2302 days after Lawrence Gonzi was affiliated to the Commonwealth of Nations, and 1356 days before Algirdas Mykolas Brazauskas was affiliated to the Social Democratic Party of Lithuania?",
                 ),
             },
         },
@@ -572,6 +580,33 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
 }
 
 
+def temporal_relation_semantic_to_allen(tr_semantic: str) -> str:
+    if tr_semantic == "before":
+        return "X < Y"
+    elif tr_semantic == "after":
+        return "X > Y"
+    elif tr_semantic == "finishes":
+        return "X f Y"
+    raise ValueError(tr_semantic)
+
+
+semantic_to_allen = {
+    "before": "X < Y",
+    "after": "X > Y",
+    "meets": "X m Y",
+    "metby": "X mi Y",
+    "finishes": "X f Y",
+    "finishedby": "X fi Y",
+    "starts": "X s Y",
+    "startedby": "X si Y",
+    "overlaps": "X o Y",
+    "overlappedby": "X oi Y",
+    "during": "X d Y",
+    "contains": "X di Y",
+    "equal": "X = Y",
+}
+
+
 def get_paraphrase_examples(question: Mapping) -> list[tuple[str, str]]:
     example = QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES[question["question_level"]][
         question["question_type"]
@@ -588,6 +623,26 @@ def get_paraphrase_examples(question: Mapping) -> list[tuple[str, str]]:
             relevant_keys = [k for k in example.keys() if allen1 in k or allen2 in k]
             assert len(relevant_keys) <= 2
             return [example[k] for k in relevant_keys]
+        # special handling for complex duration question
+        # (temporal relation example: 'duration_234 days after&duration_during')
+        elif re.match(r"duration_[^&]*&duration_[^&]*", question["temporal_relation"]):
+            d1, d2 = question["temporal_relation"].split("&")
+            relevant_keys = ["duration_N(after|before)&duration_N(after|before)"]
+            d1_maybe_allen = semantic_to_allen.get(d1.replace("duration_", ""))
+            d2_maybe_allen = semantic_to_allen.get(d2.replace("duration_", ""))
+            relevant_keys += [
+                k
+                for k in example.keys()
+                if not d1_maybe_allen is None and d1_maybe_allen in k
+            ]
+            relevant_keys += [
+                k
+                for k in example.keys()
+                if not d2_maybe_allen is None and d2_maybe_allen in k
+            ]
+            return [example[k] for k in relevant_keys]
+        # general case: simply retrieve the example meant for
+        # question["temporal_relation"]
         else:
             return [example[question["temporal_relation"]]]
     return [example]
