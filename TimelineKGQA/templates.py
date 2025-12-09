@@ -1,4 +1,5 @@
 from typing import Mapping
+import re
 
 # noqa: E501
 QUESTION_TEMPLATES = {
@@ -473,7 +474,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
             "subject": {
                 "X < Y&X > Y": (
                     "Who member of sports team Luton Town F.C., before Vladimír Mlynář position held editor-in-chief, after Sofie Ribbing work location, The Hague?",
-                    "Who was a member of the sports team Luton Town F.C., before Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                    "Who was a member of the sports team Luton Town F.C., before Vladimír Mlynář held the position of editor-in-chief and after Sofie Ribbing worked in The Hague?",
                 ),
                 "X m Y&X mi Y": (
                     "Who member of sports team Luton Town F.C., meets Vladimír Mlynář position held editor-in-chief, metBy Sofie Ribbing work location, The Hague?",
@@ -502,18 +503,33 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
             },
             "object": {
                 "X < Y&X > Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, before Gerhard Hager position held member of the European Parliament, after Sofie Ribbing work location, The Hague?",
-                    "In which organization did Adalbert Schnee hold a military rank, before Gerhard Hager was a member of the European Parliament and after Sofie Ribbing ended working in The Hague?",
+                    "Adalbert Schnee military rank who/what/which organisation, before Gerhard Hager position held member of the European Parliament, after Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee hold a military rank, before Gerhard Hager was a member of the European Parliament and after Sofie Ribbing ended working in The Hague?",
                 ),
                 "X m Y&X mi Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, meets Gerhard Hager position held member of the European Parliament, metBy Sofie Ribbing work location, The Hague?",
-                    "In which organization did Adalbert Schnee start to hold a military rank, at the same time as Gerhard Hager started being a member of the European Parliament, and ended holding that rank at the same time as Sofie Ribbing started working in The Hague?",
+                    "Adalbert Schnee military rank who/what/which organisation, meets Gerhard Hager position held member of the European Parliament, metBy Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee start to hold a military rank at the same time as Gerhard Hager started being a member of the European Parliament, and ended holding that rank at the same time as Sofie Ribbing started working in The Hague?",
                 ),
-                "X o Y&X oi Y": (),
-                "X s Y&X si Y": (),
-                "X d Y&X di Y": (),
-                "X fi Y&X fi Y": (),
-                "X = Y&X = Y": (),
+                "X o Y&X oi Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, during Gerhard Hager position held member of the European Parliament, during Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee hold a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
+                ),
+                "X s Y&X si Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, starts Gerhard Hager position held member of the European Parliament, startedBy Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee start to hold a military rank, at the same time as Gerhard Hager started being a member of the European Parliament and Sofie Ribbing started working in The Hague?",
+                ),
+                "X d Y&X di Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, during Gerhard Hager position held member of the European Parliament, during Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee hold a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
+                ),
+                "X f Y&X fi Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, finishes Gerhard Hager position held member of the European Parliament, finishedBy Sofie Ribbing work location, The Hague?",
+                    "In which organisation did Adalbert Schnee stop holding a military rank, at the same time as Gerhard Hager stopped being a member of the European Parliament and Sofie Ribbing stopped working in The Hague?",
+                ),
+                "X = Y&X = Y": (
+                    "Adalbert Schnee military rank who/what/which organisation, equal Gerhard Hager position held member of the European Parliament, equal Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee start and end holding a military rank, at the same time as Gerhard Hager started and stopped being a member of the European Parliament and Sofie Ribbing started and stopped working in The Hague?",
+                ),
             },
         },
         "timeline_position_retrieval*3": {
@@ -561,5 +577,17 @@ def get_paraphrase_examples(question: Mapping) -> list[tuple[str, str]]:
         question["question_type"]
     ][question["answer_type"]]
     if isinstance(example, dict):
-        example = example[question["temporal_relation"]]
+        # special handling for combinations of Allen's temporal
+        # relations
+        allen_relations = "(<|>|m|mi|o|oi|s|si|d|di|f|fi|=)"
+        if re.match(
+            r"X {} Y&X {} Y".format(allen_relations, allen_relations),
+            question["temporal_relation"],
+        ):
+            allen1, allen2 = question["temporal_relation"].split("&")
+            relevant_keys = [k for k in example.keys() if allen1 in k or allen2 in k]
+            assert len(relevant_keys) <= 2
+            return [example[k] for k in relevant_keys]
+        else:
+            return [example[question["temporal_relation"]]]
     return [example]
