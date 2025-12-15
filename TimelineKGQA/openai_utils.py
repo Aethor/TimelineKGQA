@@ -60,7 +60,7 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
                     Only output the paraphrase of the question and nothing else.
 
                     Example(s):
-
+                    {}
                     """.format(
                         coarse_answer_type.get(
                             question["answer_type"], question["answer_type"]
