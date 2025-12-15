@@ -340,7 +340,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 ),
                 "duration_after": (
                     "Who member of sports team Millwall F.C. 25202 days after Mario Varglien member of sports team Italy national football team?",
-                    "25202 days after Mario Varglien was a member of the Italy national football team, who was a member of Millwall F.C.?",
+                    "Who was a member of Millwall F.C. 25202 days after Mario Varglien was a member of the Italy national football team?",
                 ),
             },
             "object": {
