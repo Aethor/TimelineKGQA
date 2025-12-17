@@ -526,10 +526,10 @@ class TKGQAGenerator:
                 - question_type: The type of the question
                 - answer_type: The type of the answer
         """
-        start_time_dt, end_time_dt = TKGQAGenerator.util_str_to_datetime(
+        start_time_dt, end_time_dt = TKGQAGenerator.utils_str_to_datetime(
             [start_time, end_time]
         )
-        duration = TKGQAGenerator.utils_format_np_datetime(
+        duration = TKGQAGenerator.utils_format_np_datetime_duration(
             abs(end_time_dt - start_time_dt)
         )
 
@@ -776,11 +776,11 @@ class TKGQAGenerator:
         second_event_start_time = second_event["start_time"]
         second_event_end_time = second_event["end_time"]
 
-        first_event_start_time_dt, first_event_end_time_dt = self.util_str_to_datetime(
+        first_event_start_time_dt, first_event_end_time_dt = self.utils_str_to_datetime(
             [first_event_start_time, first_event_end_time]
         )
         second_event_start_time_dt, second_event_end_time_dt = (
-            self.util_str_to_datetime([second_event_start_time, second_event_end_time])
+            self.utils_str_to_datetime([second_event_start_time, second_event_end_time])
         )
 
         # first generate
@@ -1162,7 +1162,7 @@ class TKGQAGenerator:
                                 second_event_object=second_event_object,
                             )
                         elif temporal_relation == "sum":
-                            temporal_answer = self.util_average_duration_calculation(
+                            temporal_answer = self.utils_average_duration_calculation(
                                 time_ranges=[
                                     [
                                         first_event_start_time_dt,
@@ -1184,7 +1184,7 @@ class TKGQAGenerator:
                                 second_event_object=second_event_object,
                             )
                         elif temporal_relation == "average":
-                            temporal_answer = self.util_average_duration_calculation(
+                            temporal_answer = self.utils_average_duration_calculation(
                                 time_ranges=[
                                     [
                                         first_event_start_time_dt,
@@ -1348,13 +1348,13 @@ class TKGQAGenerator:
         third_event_start_time = third_event["start_time"]
         third_event_end_time = third_event["end_time"]
 
-        first_event_start_time_dt, first_event_end_time_dt = self.util_str_to_datetime(
+        first_event_start_time_dt, first_event_end_time_dt = self.utils_str_to_datetime(
             [first_event_start_time, first_event_end_time]
         )
         second_event_start_time_dt, second_event_end_time_dt = (
-            self.util_str_to_datetime([second_event_start_time, second_event_end_time])
+            self.utils_str_to_datetime([second_event_start_time, second_event_end_time])
         )
-        third_event_start_time_dt, third_event_end_time_dt = self.util_str_to_datetime(
+        third_event_start_time_dt, third_event_end_time_dt = self.utils_str_to_datetime(
             [third_event_start_time, third_event_end_time]
         )
 
@@ -1716,7 +1716,7 @@ class TKGQAGenerator:
                                 temporal_duration_rank=temporal_answer,
                             )
                         elif temporal_relation == "sum":
-                            temporal_answer = self.util_average_duration_calculation(
+                            temporal_answer = self.utils_average_duration_calculation(
                                 time_ranges=[
                                     [
                                         first_event_start_time_dt,
@@ -1745,7 +1745,7 @@ class TKGQAGenerator:
                                 third_event_object=third_event_object,
                             )
                         elif temporal_relation == "average":
-                            temporal_answer = self.util_average_duration_calculation(
+                            temporal_answer = self.utils_average_duration_calculation(
                                 time_ranges=[
                                     [
                                         first_event_start_time_dt,
@@ -2037,7 +2037,9 @@ class TKGQAGenerator:
         )
         if result is None:
             return f"There is no {temporal_operator} between these time intervals."
-        return f"({result[0]}, {result[1]})"
+        start_str = TKGQAGenerator.utils_format_np_datetime(result[0])
+        end_str = TKGQAGenerator.utils_format_np_datetime(result[1])
+        return f"({start_str}, {end_str})"
 
     @staticmethod
     def relation_union_or_intersection_duration(
@@ -2052,7 +2054,7 @@ class TKGQAGenerator:
         if result is None:
             return f"There are no {temporal_operator}s between these time intervals."
         delta = abs(result[1] - result[0])
-        return TKGQAGenerator.utils_format_np_datetime(delta)
+        return TKGQAGenerator.utils_format_np_datetime_duration(delta)
 
     @staticmethod
     def relation_ordinal_time_range(
@@ -2209,7 +2211,7 @@ class TKGQAGenerator:
         return None
 
     @staticmethod
-    def util_str_to_datetime(time_range: list) -> Tuple[np.datetime64, np.datetime64]:
+    def utils_str_to_datetime(time_range: list) -> Tuple[np.datetime64, np.datetime64]:
         """
         Convert the string to datetime
 
@@ -2232,7 +2234,7 @@ class TKGQAGenerator:
 
         return start_time, end_time
 
-    def util_average_duration_calculation(
+    def utils_average_duration_calculation(
         self, time_ranges: list[[datetime, datetime]], temporal_operator: str = None
     ):
         try:
@@ -2241,21 +2243,21 @@ class TKGQAGenerator:
                     abs(time_range[1] - time_range[0]) for time_range in time_ranges
                 ]
                 average_d = sum(durations) / len(durations)
-                return self.utils_format_np_datetime(average_d)
+                return self.utils_format_np_datetime_duration(average_d)
 
             if temporal_operator == "sum":
                 durations = [
                     abs(time_range[1] - time_range[0]) for time_range in time_ranges
                 ]
                 total = sum(durations)
-                return self.utils_format_np_datetime(total)
+                return self.utils_format_np_datetime_duration(total)
             return None
         except Exception as e:
             logger.error(f"Error in util_average_duration_calculation: {e}")
             return None
 
     @staticmethod
-    def utils_format_np_datetime(np_date_delta):
+    def utils_format_np_datetime_duration(np_date_delta):
         td = timedelta(seconds=np_date_delta / (np.timedelta64(1, "s")))
         days = td.days
         seconds = td.seconds
@@ -2274,6 +2276,14 @@ class TKGQAGenerator:
             f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds"
         )
         return human_readable_format
+
+    @staticmethod
+    def utils_format_np_datetime(np_date: np.datetime64) -> str:
+        if np_date == np.datetime64("0001-01-01T00:00:00.000000"):
+            return "beginning of time"
+        elif np_date == np.datetime64("9999-12-31T23:59:59.999999"):
+            return "end of time"
+        return str(np_date)
 
     @property
     def allen_relations(self):
@@ -2640,8 +2650,8 @@ class TKGQAGenerator:
             raise ValueError("The function only supports two or three time ranges")
 
         # Utility function to convert string to datetime
-        start_time_a_dt, end_time_a_dt = self.util_str_to_datetime(time_ranges[0])
-        start_time_b_dt, end_time_b_dt = self.util_str_to_datetime(time_ranges[1])
+        start_time_a_dt, end_time_a_dt = self.utils_str_to_datetime(time_ranges[0])
+        start_time_b_dt, end_time_b_dt = self.utils_str_to_datetime(time_ranges[1])
 
         # Calculate the differences in days
         start_diff_days = (start_time_b_dt - start_time_a_dt) / np.timedelta64(1, "D")
@@ -2651,7 +2661,7 @@ class TKGQAGenerator:
         score = start_diff_days**2 + end_diff_days**2
 
         if len(time_ranges) == 3:
-            start_time_c_dt, end_time_c_dt = self.util_str_to_datetime(time_ranges[2])
+            start_time_c_dt, end_time_c_dt = self.utils_str_to_datetime(time_ranges[2])
             start_diff_days_c = (start_time_c_dt - start_time_a_dt) / np.timedelta64(
                 1, "D"
             )
