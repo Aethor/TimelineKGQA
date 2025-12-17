@@ -526,6 +526,12 @@ class TKGQAGenerator:
                 - question_type: The type of the question
                 - answer_type: The type of the answer
         """
+        start_time_dt, end_time_dt = TKGQAGenerator.util_str_to_datetime(
+            [start_time, end_time]
+        )
+        duration = TKGQAGenerator.utils_format_np_datetime(
+            abs(end_time_dt - start_time_dt)
+        )
 
         questions = [
             {
@@ -586,7 +592,7 @@ class TKGQAGenerator:
             {
                 "question": f"[How long/What's the duration/etc] ??? for the statement "
                 f"{subject} {predicate} {tail_object}",
-                "answer": f"{end_time} - {start_time}",
+                "answer": duration,
                 "paraphrased_question": None,
                 "events": [
                     f"{subject}|{predicate}|{tail_object}|{start_time}|{end_time}"
