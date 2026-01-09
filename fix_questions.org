@@ -824,3 +824,95 @@ examples:
   Occurrence). This can easily break templates!
 - The template for question with an =answer_type= of relation_allen
   could be improved.
+
+* Remaining issues after the first round of corrections
+
+** Wrong paraphrase for question with temporal relation =duration_after=
+
+For question with temporal relation =duration_after= and answer type
+=subject= / =object=, the paraphrase can be wrong, leading to a
+question where the type is a duration rather than an entity. This
+affect both some =medium= and =complex= questions.
+
+#+begin_example
+question: "After how many days following Kenneth W. Dam's affiliation
+with the Department of the Treasury does someone become affiliated
+with Elite (Bosnia and Herzegovina)?"
+
+answer: "Borjana Kristo"
+#+end_example
+
+Solution: ... it seems that I forgot to add the examples in the prompt -_-
+
+
+** Questions with an answer type of duration have a time interval as an answer
+
+Also, somehow the time interval is /reversed/?
+
+#+begin_example
+question: "How long was Per Unckel affiliated with Elite (Sweden)?"
+
+answer: end of time - 1994-10-03
+#+end_example
+
+Solution: fix the generation code [[elisp:(magit-show-commit "759cef7" nil nil ".")][759cef7]]
+
+** The representation of beginning of time/end of time in answers is sometimes in UTC format
+
+This is the case for =medium= and =complex= questions with an
+answer_type of =relation_intersection_or_union= or =relation_duration=
+(2 cases only).
+
+#+begin_example
+question: "Over what time period did the Alliance of Congolese
+Nationalists have an affiliation with a national minor party in the
+Democratic Republic of Congo, coinciding with the time the Belarussian
+Agrarian Party had an affiliation with a national minor party in
+Belarus?"
+
+answer: "(0001-01-01T00:00:00.000000, 9999-12-31T23:59:59.999999)"
+#+end_example
+
+Solution: fix the generation code by adding a function ~utils_format_np_datetime~
+[[elisp:(magit-show-commit "f4190cd" nil nil ".")][f4190cd]]
+
+* Remaining issues after the second round of corrections
+
+** =duration= answers should be in days
+
+Currently, =duration= answers are in years, months, days, hours,
+minutes, seconds format.
+
+- Years and months are not good duration units as they fluctuate.
+- hours/minutes/seconds are too precise for the dataset, which is at
+  the day level for ICEWS and year level for CronQuestions.
+
+
+Therefore, we should standardize all durations measurements in /days/.
+
+** For =duration=, The model sometimes does not always include the unit
+
+Example: How long was Fahri Kasırga a member of the Turkish Cabinet? 112
+
+
+Solution: we could specialize the prompt on the question type
+
+** For =duration=, the model may answer with a (potentially correct) time range
+
+** =simple=, =timestamp_range=, =timeline_position_retrieval=, =timeline=
+
+While the answer in the dataset is a single range, in some cases
+/multiple/ ranges can actually be used to answer the question
+
+#+begin_example
+Q: During what period did Alfredo Palacio hold an affiliation with the
+Executive Office of Ecuador?
+A: (2003-01-15, 2005-04-20), (2005-04-21, 2007-01-15)
+#+end_example
+
+Solution: limit possible answers to cases where only a single range is
+a possible answer.
+
+** =timestamp_range= format
+
+Label format should be (start, end) not "start and end".
