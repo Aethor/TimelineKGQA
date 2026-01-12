@@ -878,7 +878,7 @@ Solution: fix the generation code by adding a function ~utils_format_np_datetime
 
 * Remaining issues after the second round of corrections
 
-** =duration= answers should be in days
+** =duration= and =relation_duration= answers should be in days
 
 Currently, =duration= answers are in years, months, days, hours,
 minutes, seconds format.
@@ -890,33 +890,16 @@ minutes, seconds format.
 
 Therefore, we should standardize all durations measurements in /days/.
 
-** For =duration=, The model sometimes does not always include the unit
-
-Example: How long was Fahri Kasırga a member of the Turkish Cabinet? 112
-
-
-Solution: we could specialize the prompt on the question type
-
-** For =duration=, the model may answer with a (potentially correct) time range
+Fixed in [[elisp:(magit-show-commit "c60b03b" nil nil ".")][c60b03b]].
 
 ** =simple=, =timestamp_range=, =timeline_position_retrieval=, =timeline=
 
-While the answer in the dataset is a single range, in some cases
-/multiple/ ranges can actually be used to answer the question
 
-#+begin_example
-Q: During what period did Alfredo Palacio hold an affiliation with the
-Executive Office of Ecuador?
-A: (2003-01-15, 2005-04-20), (2005-04-21, 2007-01-15)
-#+end_example
+** =subject=, =object= and =timestamp_range=, =relation_union_or_intersection= answer types can have multiple answers
 
-Solution: limit possible answers to cases where only a single range is
-a possible answer.
-
-** =subject= and =object= answer types can have multiple answers
+This is fixed by [[elisp:(magit-show-commit "9a38130" nil nil ".")][9a38130]] for simple and medium questions.
 
 *** =subject=
-
 There are several possible answers for the subject, but the dataset
 only has one answer.
 
@@ -926,7 +909,6 @@ A: Abiola Ajimobi, Ibikunle Amosun, Kenneth Ugwu Nnamani
 #+end_example
 
 *** =object=
-
 There are several possible answers for the object, but the dataset
 only has one answer.
 
@@ -935,12 +917,24 @@ Q: To which organization has Efrain Alegre been affiliated throughout history?
 A: Cabinet (Paraguay), Ministry of Public Works
 #+end_example
 
+*** =timestamp_range=
+While the answer in the dataset is a single range, in some cases
+/multiple/ ranges can actually be used to answer the question
+
+#+begin_example
+Q: During what period did Alfredo Palacio hold an affiliation with the
+Executive Office of Ecuador?
+A: (2003-01-15, 2005-04-20), (2005-04-21, 2007-01-15)
+#+end_example
+
+Solution: use all valid ranges as answer.
+
+
 ** =timestamp_range= format
 
 Label format should be (start, end) not "start and end".
 
-** =medium=, =relation_union_or_intersection=, =timeline_position_retrieval_timeline_position_retrieval=, =intersection=
-
+** for =relation_union_or_intersection= answer types, there are sometimes multiple possible answers
 Counter-intuitively, we can actually have multiple answers for
 intersection questions, but the label is always a single interval.
 
@@ -959,4 +953,48 @@ Q: Before Subash Ghisingh was affiliated with the opposition major party in Indi
 A: S. Jayakumar
 #+end_example
 
-** 
+** =medium=, =relation_duration=, =timeline_position_retrieval_temporal_constrained_retrieval=, =duration_compare=
+
+In these cases, the answer is the result of a /comparison/ (shorter,
+longer, equals), which is difficult to evaluate as the model might not
+answer with such a form.
+
+#+begin_example
+Q: How long did Adama Kone serve in the Cabinet of Mali compared to Gabriel Tang’s involvement with the SPLA dissidents?
+A: shorter
+P: Adama\ Kone:\ 4\ years\ 5\ months;\ Gabriel\ Tang:\ 18\ years\ (ongoing)
+#+end_example
+
+Solution: be more explicit in the template "is X duration shorter or
+longer than Y duration?".
+
+** Underspecification problem??
+
+** =complex=, =relation_duration=, =timeline_position_retrieval*3=, =duration_compare=: The answer may not match the question
+
+In these questions, the answer is a number corresponding to the index
+of a proposition in a question. The generated question is often not
+correct, asking for the duration:
+
+#+begin_example
+Q: What is the duration of the second longest affiliation among Core Mark Holding Co’s involvement with the transportation business, Jirí Vackár’s time in government, and Spanglers’ association with criminal gangs?
+A: 2
+#+end_example
+
+In that case, the question should be: /"What is the second longest
+affiliation among..."/
+** =complex=, =relation_duration=, =timeline_position_retrieval*3=, =duration_compare=: The answer is difficult to verify
+
+In these questions, the answer is a number corresponding to the index
+of a proposition in a question. This is difficult to verify
+automatically.
+
+#+begin_example
+Q: What is the longest duration of Amadou Lamine Ba’s affiliation with the Ministry of Public Health and Quality of Life, Anna Fotyga’s affiliation with Elite (Poland), and Oumar Mariko’s affiliation with African Solidarity for Democracy and Independence?
+A: 1
+#+end_example
+
+Solution: could we change the answer to one of the proposition in the
+question? in that case /"Anna Fotyga’s affiliation with Elite
+(Poland)"/?
+** =medium=, =relation_allen=, ... are missing
