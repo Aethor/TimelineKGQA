@@ -481,8 +481,8 @@ class TKGQAGenerator:
 
         self.bulk_insert(values=insert_values_list)
 
-    @staticmethod
     def simple_question_generation_individual(
+        self,
         subject: str,
         predicate: str,
         tail_object: str,
@@ -526,7 +526,7 @@ class TKGQAGenerator:
                 - question_type: The type of the question
                 - answer_type: The type of the answer
         """
-        start_time_dt, end_time_dt = TKGQAGenerator.utils_str_to_datetime(
+        start_time_dt, end_time_dt = TKGQAGenerator.utils_time_range_str_to_datetime(
             [start_time, end_time]
         )
         duration = TKGQAGenerator.utils_format_np_datetime_duration(
@@ -536,7 +536,11 @@ class TKGQAGenerator:
         questions = [
             {
                 "question": f"??? {predicate} {tail_object} during the time range from {start_time} to {end_time}?",
-                "answer": f"{subject}",
+                "answer": ", ".join(
+                    self.simple_subjects_matching(
+                        predicate, tail_object, start_time, end_time
+                    )
+                ),
                 "paraphrased_question": None,
                 "events": [
                     f"{subject}|{predicate}|{tail_object}|{start_time}|{end_time}"
@@ -547,7 +551,11 @@ class TKGQAGenerator:
             },
             {
                 "question": f"{subject} {predicate} ??? during the time range from {start_time} to {end_time}?",
-                "answer": f"{tail_object}",
+                "answer": ", ".join(
+                    self.simple_objects_matching(
+                        subject, predicate, start_time, end_time
+                    )
+                ),
                 "paraphrased_question": None,
                 "events": [
                     f"{subject}|{predicate}|{tail_object}|{start_time}|{end_time}"
@@ -580,7 +588,12 @@ class TKGQAGenerator:
             },
             {
                 "question": f"{subject} {predicate} {tail_object} from ??? to ???",
-                "answer": f"{start_time} and {end_time}",
+                "answer": ", ".join(
+                    f"({ts_range[0]}, {ts_range[1]})"
+                    for ts_range in self.simple_timestamp_range_matching(
+                        subject, predicate, tail_object
+                    )
+                ),
                 "paraphrased_question": None,
                 "events": [
                     f"{subject}|{predicate}|{tail_object}|{start_time}|{end_time}"
@@ -776,11 +789,15 @@ class TKGQAGenerator:
         second_event_start_time = second_event["start_time"]
         second_event_end_time = second_event["end_time"]
 
-        first_event_start_time_dt, first_event_end_time_dt = self.utils_str_to_datetime(
-            [first_event_start_time, first_event_end_time]
+        first_event_start_time_dt, first_event_end_time_dt = (
+            self.utils_time_range_str_to_datetime(
+                [first_event_start_time, first_event_end_time]
+            )
         )
         second_event_start_time_dt, second_event_end_time_dt = (
-            self.utils_str_to_datetime([second_event_start_time, second_event_end_time])
+            self.utils_time_range_str_to_datetime(
+                [second_event_start_time, second_event_end_time]
+            )
         )
 
         # first generate
@@ -969,6 +986,25 @@ class TKGQAGenerator:
                         second_event_predicate=second_event_predicate,
                         second_event_object=second_event_object,
                     )
+                    if question_draft["answer_type"] == "subject":
+                        matching_subjects = self.medium_subjects_matching_allen(
+                            first_event_predicate,
+                            first_event_object,
+                            temporal_relation["relation"],
+                            second_event_start_time,
+                            second_event_end_time,
+                        )
+                    elif question_draft["answer_type"] == "object":
+                        matching_subjects = self.medium_objects_matching_allen(
+                            first_event_subject,
+                            first_event_predicate,
+                            temporal_relation["relation"],
+                            second_event_start_time,
+                            second_event_end_time,
+                        )
+                    else:
+                        raise ValueError(question_draft["answer_type"])
+                    question_draft["answer"] = ", ".join(matching_subjects)
                     # this will generate the basic temporal relation questions.
                     # TODO: we also need to generate the one duration_before, duration_after
                     # If relation is before or after, then we can generate the duration_before, duration_after
@@ -1010,6 +1046,31 @@ class TKGQAGenerator:
                         duration_question_draft["temporal_relation"] = (
                             f"duration_{temporal_relation_semantic}"
                         )
+                        # We can reuse a simple matching for this
+                        # question, because other possible answers
+                        # must have the exact same date as the sampled
+                        # answer anyway.
+                        if duration_question_draft["answer_type"] == "subject":
+                            duration_question_answer = ", ".join(
+                                self.simple_subjects_matching(
+                                    first_event_predicate,
+                                    first_event_object,
+                                    first_event_start_time,
+                                    first_event_end_time,
+                                )
+                            )
+                        elif duration_question_draft["answer_type"] == "object":
+                            duration_question_answer = ", ".join(
+                                self.simple_objects_matching(
+                                    first_event_subject,
+                                    first_event_predicate,
+                                    first_event_start_time,
+                                    first_event_end_time,
+                                )
+                            )
+                        else:
+                            raise ValueError(duration_question_draft["answer_type"])
+                        duration_question_draft["answer"] = duration_question_answer
                         medium_type_1_b_questions.append(duration_question_draft)
                 else:
                     """
@@ -1023,12 +1084,14 @@ class TKGQAGenerator:
                         random_pick_template = random.choice(
                             this_type_templates[temporal_relation]
                         )
-                        temporal_answer = self.relation_union_or_intersection(
-                            time_ranges=[
-                                (first_event_start_time_dt, first_event_end_time_dt),
-                                (second_event_start_time_dt, second_event_end_time_dt),
-                            ],
-                            temporal_operator=temporal_relation,
+                        assert temporal_relation == "intersection"
+                        temporal_answer = self.medium_intervals_matching_intersection(
+                            first_event_subject,
+                            first_event_predicate,
+                            first_event_object,
+                            second_event_subject,
+                            second_event_predicate,
+                            second_event_object,
                         )
 
                         question_draft["question"] = random_pick_template.format(
@@ -1039,7 +1102,9 @@ class TKGQAGenerator:
                             second_event_predicate=second_event_predicate,
                             second_event_object=second_event_object,
                         )
-                        question_draft["answer"] = temporal_answer
+                        question_draft["answer"] = ", ".join(
+                            [f"({start}, {end})" for start, end in temporal_answer]
+                        )
                     elif question_draft["answer_type"] == "relation_allen":
                         temporal_allen_relation = self.relation_allen_time_range(
                             time_range_a=[
@@ -1348,14 +1413,20 @@ class TKGQAGenerator:
         third_event_start_time = third_event["start_time"]
         third_event_end_time = third_event["end_time"]
 
-        first_event_start_time_dt, first_event_end_time_dt = self.utils_str_to_datetime(
-            [first_event_start_time, first_event_end_time]
+        first_event_start_time_dt, first_event_end_time_dt = (
+            self.utils_time_range_str_to_datetime(
+                [first_event_start_time, first_event_end_time]
+            )
         )
         second_event_start_time_dt, second_event_end_time_dt = (
-            self.utils_str_to_datetime([second_event_start_time, second_event_end_time])
+            self.utils_time_range_str_to_datetime(
+                [second_event_start_time, second_event_end_time]
+            )
         )
-        third_event_start_time_dt, third_event_end_time_dt = self.utils_str_to_datetime(
-            [third_event_start_time, third_event_end_time]
+        third_event_start_time_dt, third_event_end_time_dt = (
+            self.utils_time_range_str_to_datetime(
+                [third_event_start_time, third_event_end_time]
+            )
         )
 
         # first generate
@@ -2211,7 +2282,18 @@ class TKGQAGenerator:
         return None
 
     @staticmethod
-    def utils_str_to_datetime(time_range: list) -> Tuple[np.datetime64, np.datetime64]:
+    def utils_str_to_datetime(ts: str) -> np.datetime64:
+        if ts == "beginning of time":
+            return np.datetime64(datetime.min.replace(year=1))
+        elif ts == "end of time":
+            return np.datetime64(datetime.max.replace(year=9999))
+        else:
+            return np.datetime64(ts)
+
+    @staticmethod
+    def utils_time_range_str_to_datetime(
+        time_range: list,
+    ) -> Tuple[np.datetime64, np.datetime64]:
         """
         Convert the string to datetime
 
@@ -2223,19 +2305,15 @@ class TKGQAGenerator:
 
         """
         start_time, end_time = time_range
-        if start_time == "beginning of time":
-            start_time = datetime.min.replace(year=1)
-        if end_time == "end of time":
-            end_time = datetime.max.replace(year=9999)
-
-        # convert the time to numerical value, format is like this: 1939-04-25
-        start_time = np.datetime64(start_time)
-        end_time = np.datetime64(end_time)
-
-        return start_time, end_time
+        return (
+            TKGQAGenerator.utils_str_to_datetime(start_time),
+            TKGQAGenerator.utils_str_to_datetime(end_time),
+        )
 
     def utils_average_duration_calculation(
-        self, time_ranges: list[list[np.datetime64]], temporal_operator: Optional[str] = None
+        self,
+        time_ranges: list[list[np.datetime64]],
+        temporal_operator: Optional[str] = None,
     ):
         try:
             if temporal_operator == "average":
@@ -2264,9 +2342,9 @@ class TKGQAGenerator:
         """
         td = timedelta(seconds=np_date_delta / (np.timedelta64(1, "s")))
         # rough approximation
-        years = td.days // 365 
+        years = td.days // 365
         if years > 9000:
-           return "forever"
+            return "forever"
         return f"{td.days} days"
 
     @staticmethod
@@ -2642,8 +2720,12 @@ class TKGQAGenerator:
             raise ValueError("The function only supports two or three time ranges")
 
         # Utility function to convert string to datetime
-        start_time_a_dt, end_time_a_dt = self.utils_str_to_datetime(time_ranges[0])
-        start_time_b_dt, end_time_b_dt = self.utils_str_to_datetime(time_ranges[1])
+        start_time_a_dt, end_time_a_dt = self.utils_time_range_str_to_datetime(
+            time_ranges[0]
+        )
+        start_time_b_dt, end_time_b_dt = self.utils_time_range_str_to_datetime(
+            time_ranges[1]
+        )
 
         # Calculate the differences in days
         start_diff_days = (start_time_b_dt - start_time_a_dt) / np.timedelta64(1, "D")
@@ -2653,7 +2735,9 @@ class TKGQAGenerator:
         score = start_diff_days**2 + end_diff_days**2
 
         if len(time_ranges) == 3:
-            start_time_c_dt, end_time_c_dt = self.utils_str_to_datetime(time_ranges[2])
+            start_time_c_dt, end_time_c_dt = self.utils_time_range_str_to_datetime(
+                time_ranges[2]
+            )
             start_diff_days_c = (start_time_c_dt - start_time_a_dt) / np.timedelta64(
                 1, "D"
             )
@@ -2732,6 +2816,164 @@ class TKGQAGenerator:
         )
         samples = [np.unravel_index(i, matrix.shape) for i in sample_indices]
         return samples
+
+    @staticmethod
+    def allen_filter_df(
+        df: pd.DataFrame, allen_relation: str, ts_range: tuple[str, str]
+    ) -> pd.DataFrame:
+        """Filter DF with ALLEN_RELATION to TS_RANGE.  For example, if
+        ALLEN_RELATION is 'X < Y' and TS_RANGE is (2010, 2013), it
+        would keep rows where 'X < (2010, 2013)'.
+        """
+        ts_start, ts_end = TKGQAGenerator.utils_time_range_str_to_datetime(
+            list(ts_range)
+        )
+        df_start = df.start_time.apply(TKGQAGenerator.utils_str_to_datetime)
+        df_end = df.end_time.apply(TKGQAGenerator.utils_str_to_datetime)
+        if allen_relation == "X < Y":
+            return df[df_end < ts_start]
+        elif allen_relation == "X > Y":
+            return df[df_start > ts_end]
+        elif allen_relation == "X m Y":
+            return df[df_end == ts_start]
+        elif allen_relation == "X mi Y":
+            return df[df_start == ts_end]
+        elif allen_relation == "X o Y":
+            return df[(df_start < ts_start) & (df_end > ts_start) & (df_end < ts_end)]
+        elif allen_relation == "X oi Y":
+            return df[(df_start > ts_start) & (df_start < ts_end) & (df_end > ts_end)]
+        elif allen_relation == "X s Y":
+            return df[(df_start == ts_start) & (df_end < ts_end)]
+        elif allen_relation == "X si Y":
+            return df[(df_start == ts_start) & (df_end > ts_end)]
+        elif allen_relation == "X d Y":
+            return df[(df_start > ts_start) & (df_end < ts_end)]
+        elif allen_relation == "X di Y":
+            return df[(df_start < ts_start) & (df_end > ts_end)]
+        elif allen_relation == "X f Y":
+            return df[(df_start > ts_start) & (df_end == ts_end)]
+        elif allen_relation == "X fi Y":
+            return df[(df_start < ts_start) & (df_end == ts_end)]
+        elif allen_relation == "X = Y":
+            return df[(df_start == ts_start) & (df_end == ts_end)]
+        else:
+            raise ValueError(f"Unknown Allen relation: {allen_relation}")
+
+    def simple_subjects_matching(
+        self, predicate: str, tail_object: str, start_time: str, end_time: str
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.predicate == predicate)
+            & (self.events_df.object == tail_object)
+            & (self.events_df.start_time == start_time)
+            & (self.events_df.end_time == end_time)
+        ]
+        return set(df.subject)
+
+    def simple_objects_matching(
+        self, subject: str, predicate: str, start_time: str, end_time: str
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.subject == subject)
+            & (self.events_df.predicate == predicate)
+            & (self.events_df.start_time == start_time)
+            & (self.events_df.end_time == end_time)
+        ]
+        return set(df.object)
+
+    def simple_timestamp_range_matching(
+        self,
+        subject: str,
+        predicate: str,
+        tail_object: str,
+    ) -> set[tuple[str, str]]:
+        df = self.events_df[
+            (self.events_df.subject == subject)
+            & (self.events_df.predicate == predicate)
+            & (self.events_df.object == tail_object)
+        ]
+        start_times = list(df.start_time)
+        end_times = list(df.end_time)
+        return {(start, end) for start, end in zip(start_times, end_times)}
+
+    def medium_subjects_matching_allen(
+        self,
+        first_event_predicate: str,
+        first_event_object: str,
+        allen_relation: str,
+        second_event_start_time: str,
+        second_event_end_time: str,
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.predicate == first_event_predicate)
+            & (self.events_df.object == first_event_object)
+        ]
+        df = TKGQAGenerator.allen_filter_df(
+            df, allen_relation, (second_event_start_time, second_event_end_time)
+        )
+        return set(df.subject)
+
+    def medium_objects_matching_allen(
+        self,
+        first_event_subject: str,
+        first_event_predicate: str,
+        allen_relation: str,
+        second_event_start_time: str,
+        second_event_end_time: str,
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.subject == first_event_subject)
+            & (self.events_df.predicate == first_event_predicate)
+        ]
+        df = TKGQAGenerator.allen_filter_df(
+            df, allen_relation, (second_event_start_time, second_event_end_time)
+        )
+        return set(df.object)
+
+    def medium_intervals_matching_intersection(
+        self,
+        first_event_subject: str,
+        first_event_predicate: str,
+        first_event_object: str,
+        second_event_subject: str,
+        second_event_predicate: str,
+        second_event_object: str,
+    ) -> set[tuple[str, str]]:
+        first_event_df = self.events_df[
+            (self.events_df.subject == first_event_subject)
+            & (self.events_df.predicate == first_event_predicate)
+            & (self.events_df.object == first_event_object)
+        ]
+        first_start = [
+            TKGQAGenerator.utils_str_to_datetime(s) for s in first_event_df.start_time
+        ]
+        first_end = [
+            TKGQAGenerator.utils_str_to_datetime(e) for e in first_event_df.end_time
+        ]
+
+        second_event_df = self.events_df[
+            (self.events_df.subject == second_event_subject)
+            & (self.events_df.predicate == second_event_predicate)
+            & (self.events_df.object == second_event_object)
+        ]
+        second_start = [
+            TKGQAGenerator.utils_str_to_datetime(s) for s in second_event_df.start_time
+        ]
+        second_end = [
+            TKGQAGenerator.utils_str_to_datetime(e) for e in second_event_df.end_time
+        ]
+
+        intersections = set()
+        for start1, end1 in zip(first_start, first_end):
+            for start2, end2 in zip(second_start, second_end):
+                inter = TKGQAGenerator.relation_union_or_intersection_(
+                    [(start1, end1), (start2, end2)], "intersection"
+                )
+                if not inter is None:
+                    inter_start = TKGQAGenerator.utils_format_np_datetime(inter[0])
+                    inter_end = TKGQAGenerator.utils_format_np_datetime(inter[1])
+                    intersections.add((inter_start, inter_end))
+        return intersections
 
 
 if __name__ == "__main__":
