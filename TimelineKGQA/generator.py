@@ -2235,7 +2235,7 @@ class TKGQAGenerator:
         return start_time, end_time
 
     def utils_average_duration_calculation(
-        self, time_ranges: list[[datetime, datetime]], temporal_operator: str = None
+        self, time_ranges: list[list[np.datetime64]], temporal_operator: Optional[str] = None
     ):
         try:
             if temporal_operator == "average":
@@ -2257,25 +2257,17 @@ class TKGQAGenerator:
             return None
 
     @staticmethod
-    def utils_format_np_datetime_duration(np_date_delta):
+    def utils_format_np_datetime_duration(np_date_delta: np.timedelta64) -> str:
+        """Format a numpy timedelta.  The output is in days since the
+        smallest time granularity in ICEWS and CronQuestions is the
+        day.
+        """
         td = timedelta(seconds=np_date_delta / (np.timedelta64(1, "s")))
-        days = td.days
-        seconds = td.seconds
-        # Compute hours, minutes, and remaining seconds
-        hours, remainder = divmod(seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-
-        # also get how many years
-        years = days // 365
-        if years > 2000:
-            return "forever"
-        months = (days % 365) // 30
-        days = (days % 365) % 30
-        human_readable_format = (
-            f"{years} years, {months} months, "
-            f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds"
-        )
-        return human_readable_format
+        # rough approximation
+        years = td.days // 365 
+        if years > 9000:
+           return "forever"
+        return f"{td.days} days"
 
     @staticmethod
     def utils_format_np_datetime(np_date: np.datetime64) -> str:
