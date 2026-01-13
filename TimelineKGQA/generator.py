@@ -1,8 +1,10 @@
+from typing import Literal, cast
 import argparse
 import copy
 import random
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
+import itertools as it
 
 import numpy as np
 import pandas as pd
@@ -987,7 +989,7 @@ class TKGQAGenerator:
                         second_event_object=second_event_object,
                     )
                     if question_draft["answer_type"] == "subject":
-                        matching_subjects = self.medium_subjects_matching_allen(
+                        matching_entities = self.medium_subjects_matching_allen(
                             first_event_predicate,
                             first_event_object,
                             temporal_relation["relation"],
@@ -995,7 +997,7 @@ class TKGQAGenerator:
                             second_event_end_time,
                         )
                     elif question_draft["answer_type"] == "object":
-                        matching_subjects = self.medium_objects_matching_allen(
+                        matching_entities = self.medium_objects_matching_allen(
                             first_event_subject,
                             first_event_predicate,
                             temporal_relation["relation"],
@@ -1004,7 +1006,7 @@ class TKGQAGenerator:
                         )
                     else:
                         raise ValueError(question_draft["answer_type"])
-                    question_draft["answer"] = ", ".join(matching_subjects)
+                    question_draft["answer"] = ", ".join(matching_entities)
                     # this will generate the basic temporal relation questions.
                     # TODO: we also need to generate the one duration_before, duration_after
                     # If relation is before or after, then we can generate the duration_before, duration_after
@@ -1019,6 +1021,11 @@ class TKGQAGenerator:
                         # Example: 3 years before Bush as the president of US, who is the president of China?
                         # The duration is calculated based on first_end_time - second_start time
                         # NOTE: It can be extended further later to calculate first_start - second_start
+                        temporal_operator = f"duration_{temporal_relation_semantic}"
+                        temporal_operator = cast(
+                            Literal["duration_before", "duration_after"],
+                            temporal_operator,
+                        )
                         duration = self.relation_duration_calculation(
                             time_range_a=[
                                 first_event_start_time_dt,
@@ -1028,7 +1035,7 @@ class TKGQAGenerator:
                                 second_event_start_time_dt,
                                 second_event_end_time_dt,
                             ],
-                            temporal_operator=f"duration_{temporal_relation_semantic}",
+                            temporal_operator=temporal_operator,
                         )
                         # copy a new question draft
                         duration_question_draft = copy.deepcopy(question_draft)
@@ -1046,31 +1053,27 @@ class TKGQAGenerator:
                         duration_question_draft["temporal_relation"] = (
                             f"duration_{temporal_relation_semantic}"
                         )
-                        # We can reuse a simple matching for this
-                        # question, because other possible answers
-                        # must have the exact same date as the sampled
-                        # answer anyway.
                         if duration_question_draft["answer_type"] == "subject":
-                            duration_question_answer = ", ".join(
-                                self.simple_subjects_matching(
-                                    first_event_predicate,
-                                    first_event_object,
-                                    first_event_start_time,
-                                    first_event_end_time,
-                                )
+                            matching_entities = self.medium_subjects_matching_duration(
+                                first_event_predicate,
+                                first_event_object,
+                                temporal_operator,
+                                duration,
+                                second_event_start_time_dt,
+                                second_event_end_time_dt,
                             )
                         elif duration_question_draft["answer_type"] == "object":
-                            duration_question_answer = ", ".join(
-                                self.simple_objects_matching(
-                                    first_event_subject,
-                                    first_event_predicate,
-                                    first_event_start_time,
-                                    first_event_end_time,
-                                )
+                            matching_entities = self.medium_objects_matching_duration(
+                                first_event_subject,
+                                first_event_predicate,
+                                temporal_operator,
+                                duration,
+                                second_event_start_time_dt,
+                                second_event_end_time_dt,
                             )
                         else:
                             raise ValueError(duration_question_draft["answer_type"])
-                        duration_question_draft["answer"] = duration_question_answer
+                        duration_question_draft["answer"] = ", ".join(matching_entities)
                         medium_type_1_b_questions.append(duration_question_draft)
                 else:
                     """
@@ -1085,13 +1088,10 @@ class TKGQAGenerator:
                             this_type_templates[temporal_relation]
                         )
                         assert temporal_relation == "intersection"
-                        temporal_answer = self.medium_intervals_matching_intersection(
-                            first_event_subject,
-                            first_event_predicate,
-                            first_event_object,
-                            second_event_subject,
-                            second_event_predicate,
-                            second_event_object,
+                        temporal_answer = self.intervals_matching_intersection(
+                            [first_event_subject, second_event_subject],
+                            [first_event_predicate, second_event_predicate],
+                            [first_event_object, second_event_object],
                         )
 
                         question_draft["question"] = random_pick_template.format(
@@ -1609,12 +1609,47 @@ class TKGQAGenerator:
                         third_event_predicate=third_event_predicate,
                         third_event_object=third_event_object,
                     )
+                    if question_draft["answer_type"] == "subject":
+                        matching_entities = self.complex_subjects_matching(
+                            first_event_predicate,
+                            first_event_object,
+                            temporal_relation_12["relation"],
+                            second_event_start_time,
+                            second_event_end_time,
+                            temporal_relation_13["relation"],
+                            third_event_start_time,
+                            third_event_end_time,
+                        )
+                    elif question_draft["answer_type"] == "object":
+                        matching_entities = self.complex_objects_matching(
+                            first_event_subject,
+                            first_event_predicate,
+                            temporal_relation_12["relation"],
+                            second_event_start_time,
+                            second_event_end_time,
+                            temporal_relation_13["relation"],
+                            third_event_start_time,
+                            third_event_end_time,
+                        )
+                    else:
+                        raise ValueError(question_draft["answer_type"])
+                    question_draft["answer"] = ", ".join(matching_entities)
 
                     # this will generate the basic temporal relation questions.
                     # then we will want to generate the duration_before, duration_after
                     can_generate_duration_question = False
+                    temporal_operator_12 = f"duration_{temporal_relation_12_semantic}"
+                    temporal_operator_12 = cast(
+                        Literal["duration_before", "duration_after"],
+                        temporal_operator_12,
+                    )
+                    temporal_operator_13 = f"duration_{temporal_relation_13_semantic}"
+                    temporal_operator_13 = cast(
+                        Literal["duration_before", "duration_after"],
+                        temporal_operator_13,
+                    )
                     if temporal_relation_12_semantic in ["before", "after"]:
-                        duration = self.relation_duration_calculation(
+                        duration_12 = self.relation_duration_calculation(
                             time_range_a=[
                                 first_event_start_time_dt,
                                 first_event_end_time_dt,
@@ -1623,15 +1658,15 @@ class TKGQAGenerator:
                                 second_event_start_time_dt,
                                 second_event_end_time_dt,
                             ],
-                            temporal_operator=f"duration_{temporal_relation_12_semantic}",
+                            temporal_operator=temporal_operator_12,
                         )
                         temporal_relation_12_semantic = (
-                            f"{duration} {temporal_relation_12_semantic}"
+                            f"{duration_12} {temporal_relation_12_semantic}"
                         )
                         logger.debug(temporal_relation_12_semantic)
                         can_generate_duration_question = True
                     if temporal_relation_13_semantic in ["before", "after"]:
-                        duration = self.relation_duration_calculation(
+                        duration_13 = self.relation_duration_calculation(
                             time_range_a=[
                                 first_event_start_time_dt,
                                 first_event_end_time_dt,
@@ -1640,10 +1675,10 @@ class TKGQAGenerator:
                                 third_event_start_time_dt,
                                 third_event_end_time_dt,
                             ],
-                            temporal_operator=f"duration_{temporal_relation_13_semantic}",
+                            temporal_operator=temporal_operator_13,
                         )
                         temporal_relation_13_semantic = (
-                            f"{duration} {temporal_relation_13_semantic}"
+                            f"{duration_13} {temporal_relation_13_semantic}"
                         )
                         logger.debug(temporal_relation_13_semantic)
                         can_generate_duration_question = True
@@ -1668,6 +1703,59 @@ class TKGQAGenerator:
                         duration_question_draft["temporal_relation"] = (
                             f"duration_{temporal_relation_12_semantic}&duration_{temporal_relation_13_semantic}"
                         )
+                        if duration_question_draft["answer_type"] == "subject":
+                            matching_entities = (
+                                self.medium_subjects_matching_duration_or_allen(
+                                    first_event_predicate,
+                                    first_event_object,
+                                    temporal_relation_12_semantic,
+                                    temporal_operator_12,
+                                    duration_12,
+                                    temporal_relation_12["relation"],
+                                    second_event_start_time,
+                                    second_event_end_time,
+                                )
+                            )
+                            matching_entities &= (
+                                self.medium_subjects_matching_duration_or_allen(
+                                    first_event_predicate,
+                                    first_event_object,
+                                    temporal_relation_13_semantic,
+                                    temporal_operator_13,
+                                    duration_13,
+                                    temporal_relation_13["relation"],
+                                    third_event_start_time,
+                                    third_event_end_time,
+                                )
+                            )
+                        elif duration_question_draft["answer_type"] == "object":
+                            matching_entities = (
+                                self.medium_objects_matching_duration_or_allen(
+                                    first_event_subject,
+                                    first_event_predicate,
+                                    temporal_relation_12_semantic,
+                                    temporal_operator_12,
+                                    duration_12,
+                                    temporal_relation_12["relation"],
+                                    second_event_start_time,
+                                    second_event_end_time,
+                                )
+                            )
+                            matching_entities &= (
+                                self.medium_objects_matching_duration_or_allen(
+                                    first_event_subject,
+                                    first_event_predicate,
+                                    temporal_relation_13_semantic,
+                                    temporal_operator_13,
+                                    duration_13,
+                                    temporal_relation_13["relation"],
+                                    third_event_start_time,
+                                    third_event_end_time,
+                                )
+                            )
+                        else:
+                            raise ValueError(duration_question_draft["answer_type"])
+                        duration_question_draft["answer"] = ", ".join(matching_entities)
                         complex_type_1_b_questions.append(duration_question_draft)
                 else:
                     # handle the Timeline Position Retrieval + Timeline Position Retrieval + Timeline Position Retrieval
@@ -1679,13 +1767,22 @@ class TKGQAGenerator:
                         random_pick_template = random.choice(
                             this_type_templates[temporal_relation]
                         )
-                        temporal_answer = self.relation_union_or_intersection(
-                            time_ranges=[
-                                (first_event_start_time_dt, first_event_end_time_dt),
-                                (second_event_start_time_dt, second_event_end_time_dt),
-                                (third_event_start_time_dt, third_event_end_time_dt),
+                        answer_intervals = self.intervals_matching_intersection(
+                            [
+                                first_event_subject,
+                                second_event_subject,
+                                third_event_subject,
                             ],
-                            temporal_operator=temporal_relation,
+                            [
+                                first_event_predicate,
+                                second_event_predicate,
+                                third_event_predicate,
+                            ],
+                            [
+                                first_event_object,
+                                second_event_object,
+                                third_event_object,
+                            ],
                         )
 
                         question_draft["question"] = random_pick_template.format(
@@ -1701,7 +1798,9 @@ class TKGQAGenerator:
                         )
                         logger.debug(question_draft["question"])
                         logger.debug(temporal_answer)
-                        question_draft["answer"] = temporal_answer
+                        question_draft["answer"] = ", ".join(
+                            [f"({start}, {end})" for start, end in answer_intervals]
+                        )
                     elif question_draft["answer_type"] == "relation_duration":
                         """
                         There are four types in this category
@@ -2248,8 +2347,8 @@ class TKGQAGenerator:
     def relation_duration_calculation(
         time_range_a: list,
         time_range_b: list,
-        temporal_operator: str = None,
-    ) -> Optional[timedelta]:
+        temporal_operator: Literal["duration_before", "duration_after"],
+    ) -> timedelta:
         """
         We will calculate the time difference between two time ranges
 
@@ -2268,18 +2367,16 @@ class TKGQAGenerator:
             timedelta: The time difference between two time ranges
 
         """
-        if temporal_operator is None or temporal_operator not in [
-            "duration_before",
-            "duration_after",
-        ]:
+        if time_range_a == time_range_b:
+            return timedelta(0)
+        if temporal_operator == "duration_before":
+            return abs(time_range_a[1] - time_range_b[0])
+        elif temporal_operator == "duration_after":
+            return abs(time_range_b[1] - time_range_a[0])
+        else:
             raise ValueError(
                 "temporal_operator should be one of the following: duration_before, duration_after"
             )
-        if temporal_operator == "duration_before":
-            return abs(time_range_a[1] - time_range_b[0])
-        if temporal_operator == "duration_after":
-            return abs(time_range_b[1] - time_range_a[0])
-        return None
 
     @staticmethod
     def utils_str_to_datetime(ts: str) -> np.datetime64:
@@ -2930,50 +3027,213 @@ class TKGQAGenerator:
         )
         return set(df.object)
 
-    def medium_intervals_matching_intersection(
+    def medium_subjects_matching_duration(
+        self,
+        first_event_predicate: str,
+        first_event_object: str,
+        temporal_operator: Literal["duration_before", "duration_after"],
+        duration_delta: timedelta,
+        second_event_start_time: np.datetime64,
+        second_event_end_time: np.datetime64,
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.predicate == first_event_predicate)
+            & (self.events_df.object == first_event_object)
+        ]
+        df.loc[:, ["start_time_dt"]] = df.start_time.apply(
+            TKGQAGenerator.utils_str_to_datetime
+        )
+        df.loc[:, ["end_time_dt"]] = df.end_time.apply(
+            TKGQAGenerator.utils_str_to_datetime
+        )
+        duration_delta_series = df.apply(
+            lambda row: self.relation_duration_calculation(
+                [row.start_time_dt, row.end_time_dt],
+                [second_event_start_time, second_event_end_time],
+                temporal_operator,
+            ),
+            axis=1,
+        )
+        df = df[duration_delta_series == duration_delta]
+        return set(df.subject)
+
+    def medium_objects_matching_duration(
         self,
         first_event_subject: str,
         first_event_predicate: str,
-        first_event_object: str,
-        second_event_subject: str,
-        second_event_predicate: str,
-        second_event_object: str,
-    ) -> set[tuple[str, str]]:
-        first_event_df = self.events_df[
+        temporal_operator: Literal["duration_before", "duration_after"],
+        duration_delta: timedelta,
+        second_event_start_time: np.datetime64,
+        second_event_end_time: np.datetime64,
+    ) -> set[str]:
+        df = self.events_df[
             (self.events_df.subject == first_event_subject)
             & (self.events_df.predicate == first_event_predicate)
-            & (self.events_df.object == first_event_object)
         ]
-        first_start = [
-            TKGQAGenerator.utils_str_to_datetime(s) for s in first_event_df.start_time
-        ]
-        first_end = [
-            TKGQAGenerator.utils_str_to_datetime(e) for e in first_event_df.end_time
-        ]
+        df.loc[:, "start_time_dt"] = df.start_time.apply(
+            TKGQAGenerator.utils_str_to_datetime
+        )
+        df.loc[:, "end_time_dt"] = df.end_time.apply(
+            TKGQAGenerator.utils_str_to_datetime
+        )
+        duration_delta_series = df.apply(
+            lambda row: self.relation_duration_calculation(
+                [row.start_time_dt, row.end_time_dt],
+                [second_event_start_time, second_event_end_time],
+                temporal_operator,
+            ),
+            axis=1,
+        )
+        df = df[duration_delta_series == duration_delta]
+        return set(df.subject)
 
-        second_event_df = self.events_df[
-            (self.events_df.subject == second_event_subject)
-            & (self.events_df.predicate == second_event_predicate)
-            & (self.events_df.object == second_event_object)
-        ]
-        second_start = [
-            TKGQAGenerator.utils_str_to_datetime(s) for s in second_event_df.start_time
-        ]
-        second_end = [
-            TKGQAGenerator.utils_str_to_datetime(e) for e in second_event_df.end_time
-        ]
+    def intervals_matching_intersection(
+        self,
+        subjects: list[str],
+        predicates: list[str],
+        objects: list[str],
+    ) -> set[tuple[str, str]]:
+        assert len(subjects) == len(predicates) == len(objects)
+
+        df_list = []
+        intervals = []
+        for subj, pred, obj in zip(subjects, predicates, objects):
+            df = self.events_df[
+                (self.events_df.subject == subj)
+                & (self.events_df.predicate == pred)
+                & (self.events_df.object == obj)
+            ]
+            df_list.append(df)
+            start = [TKGQAGenerator.utils_str_to_datetime(s) for s in df.start_time]
+            end = [TKGQAGenerator.utils_str_to_datetime(e) for e in df.end_time]
+            intervals.append([(s, e) for s, e in zip(start, end)])
 
         intersections = set()
-        for start1, end1 in zip(first_start, first_end):
-            for start2, end2 in zip(second_start, second_end):
-                inter = TKGQAGenerator.relation_union_or_intersection_(
-                    [(start1, end1), (start2, end2)], "intersection"
-                )
-                if not inter is None:
-                    inter_start = TKGQAGenerator.utils_format_np_datetime(inter[0])
-                    inter_end = TKGQAGenerator.utils_format_np_datetime(inter[1])
-                    intersections.add((inter_start, inter_end))
+        for interval_prod in it.product(*intervals):
+            inter = TKGQAGenerator.relation_union_or_intersection_(
+                interval_prod, "intersection"
+            )
+            if not inter is None:
+                inter_start = TKGQAGenerator.utils_format_np_datetime(inter[0])
+                inter_end = TKGQAGenerator.utils_format_np_datetime(inter[1])
+                intersections.add((inter_start, inter_end))
         return intersections
+
+    def complex_subjects_matching(
+        self,
+        first_event_predicate: str,
+        first_event_object: str,
+        allen_relation_12: str,
+        second_event_start_time: str,
+        second_event_end_time: str,
+        allen_relation_13: str,
+        third_event_start_time: str,
+        third_event_end_time: str,
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.predicate == first_event_predicate)
+            & (self.events_df.object == first_event_object)
+        ]
+        df = TKGQAGenerator.allen_filter_df(
+            df, allen_relation_12, (second_event_start_time, second_event_end_time)
+        )
+        df = TKGQAGenerator.allen_filter_df(
+            df, allen_relation_13, (third_event_start_time, third_event_end_time)
+        )
+        return set(df.subject)
+
+    def complex_objects_matching(
+        self,
+        first_event_subject: str,
+        first_event_predicate: str,
+        allen_relation_12: str,
+        second_event_start_time: str,
+        second_event_end_time: str,
+        allen_relation_13: str,
+        third_event_start_time: str,
+        third_event_end_time: str,
+    ) -> set[str]:
+        df = self.events_df[
+            (self.events_df.subject == first_event_subject)
+            & (self.events_df.predicate == first_event_predicate)
+        ]
+        df = TKGQAGenerator.allen_filter_df(
+            df, allen_relation_12, (second_event_start_time, second_event_end_time)
+        )
+        df = TKGQAGenerator.allen_filter_df(
+            df, allen_relation_13, (third_event_start_time, third_event_end_time)
+        )
+        return set(df.object)
+
+    def medium_subjects_matching_duration_or_allen(
+        self,
+        first_event_predicate: str,
+        first_event_object: str,
+        temporal_relation_semantic: str,
+        temporal_operator: Literal["duration_before", "duration_after"],
+        duration: timedelta,
+        allen_relation: str,
+        second_event_start_time: str,
+        second_event_end_time: str,
+    ) -> set[str]:
+        is_duration = temporal_relation_semantic in ["before", "after"]
+        if is_duration:
+            second_event_start_time_dt, second_event_end_time_dt = (
+                self.utils_time_range_str_to_datetime(
+                    [second_event_start_time, second_event_end_time]
+                )
+            )
+            return self.medium_subjects_matching_duration(
+                first_event_predicate,
+                first_event_object,
+                temporal_operator,
+                duration,
+                second_event_start_time_dt,
+                second_event_end_time_dt,
+            )
+        else:
+            return self.medium_subjects_matching_allen(
+                first_event_predicate,
+                first_event_object,
+                allen_relation,
+                second_event_start_time,
+                second_event_end_time,
+            )
+
+    def medium_objects_matching_duration_or_allen(
+        self,
+        first_event_subject: str,
+        first_event_predicate: str,
+        temporal_relation_semantic: str,
+        temporal_operator: Literal["duration_before", "duration_after"],
+        duration: timedelta,
+        allen_relation: str,
+        second_event_start_time: str,
+        second_event_end_time: str,
+    ) -> set[str]:
+        is_duration = temporal_relation_semantic in ["before", "after"]
+        if is_duration:
+            second_event_start_time_dt, second_event_end_time_dt = (
+                self.utils_time_range_str_to_datetime(
+                    [second_event_start_time, second_event_end_time]
+                )
+            )
+            return self.medium_objects_matching_duration(
+                first_event_subject,
+                first_event_predicate,
+                temporal_operator,
+                duration,
+                second_event_start_time_dt,
+                second_event_end_time_dt,
+            )
+        else:
+            return self.medium_subjects_matching_allen(
+                first_event_subject,
+                first_event_predicate,
+                allen_relation,
+                second_event_start_time,
+                second_event_end_time,
+            )
 
 
 if __name__ == "__main__":
