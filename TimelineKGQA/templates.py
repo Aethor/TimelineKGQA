@@ -553,7 +553,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "What is the duration of George Nicoll Barnes' membership of the 29th Parliament of the United Kingdom while Walther Hermann Nernst was nominated for the Nobel Prize in Chemistry and Paul Karrer was nominated for the Nobel Prize in Chemistry?",
                 ),
                 "duration_compare": (
-                    "Which one is 2 longest among Paddy McGuire member of sports team Manchester City F.C., Llibert Cuatrecasas i Membrado position held Member of the Congress of Deputies of Spain, George Nicoll Barnes position held Member of the 29th Parliament of the United Kingdom?",
+                    "Which one is 2nd longest among Paddy McGuire member of sports team Manchester City F.C., Llibert Cuatrecasas i Membrado position held Member of the Congress of Deputies of Spain, George Nicoll Barnes position held Member of the 29th Parliament of the United Kingdom?",
                     "Which one is the second longest among Paddy McGuire's membership in Manchester City F.C., Llibert Cuatrecasas i Membrado membership of the Congress of Deputies of Spain and George Nicoll Barnes' membership of the 29th Parliament of the United Kingdoms?",
                 ),
                 "sum": (

@@ -1883,7 +1883,9 @@ class TKGQAGenerator:
                                 third_event_subject=third_event_subject,
                                 third_event_predicate=third_event_predicate,
                                 third_event_object=third_event_object,
-                                temporal_duration_rank=temporal_answer,
+                                temporal_duration_rank=TKGQAGenerator.utils_number_to_rank(
+                                    temporal_answer
+                                ),
                             )
                         elif temporal_relation == "sum":
                             temporal_answer = self.utils_average_duration_calculation(
@@ -2451,6 +2453,14 @@ class TKGQAGenerator:
         elif np_date == np.datetime64("9999-12-31T23:59:59.999999"):
             return "end of time"
         return str(np_date)
+
+    @staticmethod
+    def utils_number_to_rank(n: int) -> str:
+        if 11 <= (n % 100) <= 13:
+            suffix = "th"
+        else:
+            suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
+        return str(n) + suffix
 
     @property
     def allen_relations(self):
