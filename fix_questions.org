@@ -892,12 +892,11 @@ Therefore, we should standardize all durations measurements in /days/.
 
 Fixed in [[elisp:(magit-show-commit "c60b03b" nil nil ".")][c60b03b]].
 
-** =simple=, =timestamp_range=, =timeline_position_retrieval=, =timeline=
 
+** =subject=, =object=, =timestamp_range=, =relation_union_or_intersection= answer types can have multiple answers
 
-** =subject=, =object= and =timestamp_range=, =relation_union_or_intersection= answer types can have multiple answers
-
-This is fixed by [[elisp:(magit-show-commit "9a38130" nil nil ".")][9a38130]] for simple and medium questions.
+This is fixed by [[elisp:(magit-show-commit "9a38130" nil nil ".")][9a38130]], [[elisp:(magit-show-commit "823d9d8" nil nil ".")][823d9d8]] by automaticall /expanding/ the
+original answer to the set of valid answers.
 
 *** =subject=
 There are several possible answers for the subject, but the dataset
@@ -998,3 +997,4 @@ Solution: could we change the answer to one of the proposition in the
 question? in that case /"Anna Fotyga’s affiliation with Elite
 (Poland)"/?
 ** =medium=, =relation_allen=, ... are missing
+** =relation_union_or_intersection= should just be =relation_intersection=
