@@ -1,3 +1,4 @@
+from scratch import paraphrased
 from typing import Mapping
 
 from openai import OpenAI
@@ -54,7 +55,8 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
                     "role": "system",
                     "content": """You are an expert on paraphrasing questions.
                     You job is paraphrasing this question into a natural language question.
-                    The answer to this question is a {}.
+                    The answer to this question is a {}: {}.
+                    Do not mention the answer in the question.
                     You must mention all temporal constraints of the question.
                     Do not add additional time indication in the question, it is a type of implicit temporal question.
                     Only output the paraphrase of the question and nothing else.
@@ -65,6 +67,7 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
                         coarse_answer_type.get(
                             question["answer_type"], question["answer_type"]
                         ),
+                        question["answer"],
                         examples_str,
                     ),
                 },
@@ -78,6 +81,10 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
             stop=["\n"],
         )
         paraphrased_question = response.choices[0].message.content
+        if question["answer"] in paraphrased_question:
+            raise ValueError(
+                "the question in invalid because the answer was found in the question"
+            )
         return paraphrased_question
     except Exception as e:
         print(f"An error occurred: {e}")
