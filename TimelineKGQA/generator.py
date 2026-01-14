@@ -928,6 +928,21 @@ class TKGQAGenerator:
                 "temporal_relation": "intersection",
             },
             {
+                "question": f"{first_event_subject} {first_event_predicate} {first_event_object} ??? {second_event_subject} {second_event_predicate} {second_event_object}",
+                "answer": "Yes/No or the relevant Allen Relation",
+                "paraphrased_question": None,
+                "events": [
+                    f"{first_event_subject}|{first_event_predicate}|{first_event_object}|"
+                    f"{first_event_start_time}|{first_event_end_time}",
+                    f"{second_event_subject}|{second_event_predicate}|{second_event_object}|"
+                    f"{second_event_start_time}|{second_event_end_time}",
+                ],
+                "question_level": "medium",
+                "question_type": "timeline_position_retrieval_timeline_position_retrieval",
+                "answer_type": "relation_allen",
+                "temporal_relation": "relation_allen",
+            },
+            {
                 "question": f"{first_event_subject} {first_event_predicate} {first_event_object} "
                 f"???[Timeline Operation on ({first_event_start_time}, "
                 f"{first_event_end_time}) vs ({second_event_start_time}, "
@@ -1119,47 +1134,19 @@ class TKGQAGenerator:
                         question_draft["temporal_relation"] = temporal_allen_relation[
                             "relation"
                         ]
-                        # random select from [choices, true_false]
-                        question_format = random.choice(["choice", "true_false"])
-                        if question_format == "choice":
-                            random_pick_template = random.choice(
-                                this_type_templates["choice"]
-                            )
-                            temporal_answer = temporal_allen_relation["relation"]
-                            question_draft["question"] = random_pick_template.format(
-                                first_event_subject=first_event_subject,
-                                first_event_predicate=first_event_predicate,
-                                first_event_object=first_event_object,
-                                second_event_subject=second_event_subject,
-                                second_event_predicate=second_event_predicate,
-                                second_event_object=second_event_object,
-                            )
-                            question_draft["answer"] = temporal_answer
-
-                        else:
-                            random_pick_template = random.choice(
-                                this_type_templates["true_false"]
-                            )
-                            random_yes_no_answer = random.choice(["True", "False"])
-                            if random_yes_no_answer == "True":
-                                temporal_relation = temporal_allen_relation["relation"]
-                            else:
-                                temporal_relation = random.choice(
-                                    list(
-                                        set(self.allen_relations)
-                                        - {temporal_allen_relation["relation"]}
-                                    )
-                                )
-                            question_draft["question"] = random_pick_template.format(
-                                first_event_subject=first_event_subject,
-                                first_event_predicate=first_event_predicate,
-                                first_event_object=first_event_object,
-                                second_event_subject=second_event_subject,
-                                second_event_predicate=second_event_predicate,
-                                second_event_object=second_event_object,
-                                temporal_relation=temporal_relation,
-                            )
-                            question_draft["answer"] = random_yes_no_answer
+                        random_pick_template = random.choice(
+                            this_type_templates["relation_allen"]
+                        )
+                        temporal_answer = temporal_allen_relation["relation"]
+                        question_draft["question"] = random_pick_template.format(
+                            first_event_subject=first_event_subject,
+                            first_event_predicate=first_event_predicate,
+                            first_event_object=first_event_object,
+                            second_event_subject=second_event_subject,
+                            second_event_predicate=second_event_predicate,
+                            second_event_object=second_event_object,
+                        )
+                        question_draft["answer"] = temporal_answer
                     elif question_draft["answer_type"] == "relation_duration":
                         """There are four types in this category
                         - duration => which is the intersection of the two time range

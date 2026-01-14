@@ -164,24 +164,8 @@ QUESTION_TEMPLATES = {
             # However, it is still possible to have specific format for specific relationship question, even it is true/false question.
             # We will do choice and random for now, consider this later.
             "relation_allen": {
-                # "X < Y": [],
-                # "X m Y": [],
-                # "X o Y": [],
-                # "X fi Y": [],
-                # "X di Y": [],
-                # "X s Y": [],
-                # "X = Y": [],
-                # "X si Y": [],
-                # "X d Y": [],
-                # "X f Y": [],
-                # "X oi Y": [],
-                # "X mi Y": [],
-                # "X > Y": [],
-                "choice": [
+                "relation_allen": [
                     "What's the Allen temporal relation between {first_event_subject} {first_event_predicate} {first_event_object} and {second_event_subject} {second_event_predicate} {second_event_object}?",
-                ],
-                "true_false": [
-                    "Is '{temporal_relation}' the correct Allen temporal relation between {first_event_subject} {first_event_predicate} {first_event_object} and {second_event_subject} {second_event_predicate} {second_event_object}?",
                 ],
             },
             "relation_duration": {
@@ -421,30 +405,10 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "During which period was Tom Hutchinson a member of Darlington F.C. while Giuseppe Iachini was a member of Como 1907?",
                 ),
             },
-            # we are looking for the allen temporal relation between the two events, so the question normally is asked for relation directly, or true/false question.
-            # However, it is still possible to have specific format for specific relationship question, even it is true/false question.
-            # We will do choice and random for now, consider this later.
             "relation_allen": {
-                # "X < Y": [],
-                # "X m Y": [],
-                # "X o Y": [],
-                # "X fi Y": [],
-                # "X di Y": [],
-                # "X s Y": [],
-                # "X = Y": [],
-                # "X si Y": [],
-                # "X d Y": [],
-                # "X f Y": [],
-                # "X oi Y": [],
-                # "X mi Y": [],
-                # "X > Y": [],
-                "choice": (
+                "relation_allen": (
                     "What's the Allen temporal relation between Tom Hutchinson member of sports team Darlington F.C. and Giuseppe Iachini member of sports team Como 1907?",
-                    "What's the Allen temporal relation between the time intervals where Tom Hutchinson was a member of Darlington F.C. and Giuseppe Iachini was a member of Como 1907?",
-                ),
-                "true_false": (
-                    "Is the Allen temporal relation between Tom Hutchinson member of sports team Darlington F.C. during Giuseppe Iachini member of sports team Como 1907?",
-                    "Is 'during' the correct Allen temporal relation between the time intervals where Tom Hutchinson was a member of Darlington F.C. and Giuseppe Iachini was a member of Como 1907?",
+                    "What's the Allen temporal relation between the time periods where Tom Hutchinson was a member of Darlington F.C. and Giuseppe Iachini was a member of Como 1907?",
                 ),
             },
             "relation_duration": {
