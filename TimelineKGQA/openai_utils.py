@@ -81,10 +81,6 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
             stop=["\n"],
         )
         paraphrased_question = response.choices[0].message.content
-        if question["answer"] in paraphrased_question:
-            raise ValueError(
-                "the question in invalid because the answer was found in the question"
-            )
         return paraphrased_question
     except Exception as e:
         print(f"An error occurred: {e}")
