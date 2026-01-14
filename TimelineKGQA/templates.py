@@ -455,7 +455,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 ),
                 "duration_compare": (
                     "Is the duration of United States Seventh Fleet director/manager Robert F. Willard shorter the duration of Katrín Jakobsdóttir position held Member of the 2013-2016 Parliament of Iceland?",
-                    "Was Robert F. Willard's tenure as director/manager of the United States Seventh Fleet shorter than Katrín Jakobsdóttir's time serving as a Member of the 2013-2016 Parliament of Iceland?",
+                    "Was Robert F. Willard's tenure as director/manager of the United States Seventh Fleet shorter or longer than Katrín Jakobsdóttir's time serving as a Member of the 2013-2016 Parliament of Iceland?",
                 ),
                 # This is actually for union
                 "sum": (
