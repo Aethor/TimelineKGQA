@@ -155,7 +155,7 @@ QUESTION_TEMPLATES = {
         },
         "timeline_position_retrieval_timeline_position_retrieval": {
             # because it is the time range, then we should also ask about the duration
-            "relation_union_or_intersection": {
+            "timestamp_range": {
                 "intersection": [
                     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object}, at the same time, {second_event_subject} {second_event_predicate} {second_event_object}?"
                 ],
@@ -196,7 +196,7 @@ QUESTION_TEMPLATES = {
             ],
         },
         "timeline_position_retrieval*3": {
-            "relation_union_or_intersection": {
+            "timestamp_range": {
                 "intersection": [
                     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object}, at the same time, {second_event_subject} {second_event_predicate} {second_event_object}, at the same time, {third_event_subject} {third_event_predicate} {third_event_object}?"
                 ],
@@ -399,7 +399,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
         },
         "timeline_position_retrieval_timeline_position_retrieval": {
             # because it is the time range, then we should also ask about the duration
-            "relation_union_or_intersection": {
+            "timestamp_range": {
                 "intersection": (
                     "From when to when, Tom Hutchinson member of sports team Darlington F.C., at the same time, Giuseppe Iachini member of sports team Como 1907?",
                     "During which period was Tom Hutchinson a member of Darlington F.C. while Giuseppe Iachini was a member of Como 1907?",
@@ -505,7 +505,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
             },
         },
         "timeline_position_retrieval*3": {
-            "relation_union_or_intersection": {
+            "timestamp_range": {
                 "intersection": (
                     "From when to when, Clarence Godber Burton position held councillor, at the same time, Cyril Svoboda position held Member of the Chamber of Deputies of the Parliament of the Czech Republic, at the same time, 1978 Colgate International significant event occurrence?",
                     "From when to when did Clarence Godber Burton held the position of councillor while Cyril Svoboda was a member of the Chamber of Deputies of the Parliament of the Czech Republic and the 1978 Colgate International event occured?",

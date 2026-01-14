@@ -924,7 +924,7 @@ class TKGQAGenerator:
                 ],
                 "question_level": "medium",
                 "question_type": "timeline_position_retrieval_timeline_position_retrieval",
-                "answer_type": "relation_union_or_intersection",
+                "answer_type": "timestamp_range",
                 "temporal_relation": "intersection",
             },
             {
@@ -1094,21 +1094,17 @@ class TKGQAGenerator:
                     """
                     Handle in theory four types of questions here
                     """
-                    if (
-                        question_draft["answer_type"]
-                        == "relation_union_or_intersection"
-                    ):
+                    if question_draft["answer_type"] == "timestamp_range":
                         temporal_relation = question_draft["temporal_relation"]
+                        assert temporal_relation == "intersection"
                         random_pick_template = random.choice(
                             this_type_templates[temporal_relation]
                         )
-                        assert temporal_relation == "intersection"
                         temporal_answer = self.intervals_matching_intersection(
                             [first_event_subject, second_event_subject],
                             [first_event_predicate, second_event_predicate],
                             [first_event_object, second_event_object],
                         )
-
                         question_draft["question"] = random_pick_template.format(
                             first_event_subject=first_event_subject,
                             first_event_predicate=first_event_predicate,
@@ -1494,7 +1490,7 @@ class TKGQAGenerator:
                 ],
                 "question_level": "complex",
                 "question_type": "timeline_position_retrieval*3",
-                "answer_type": "relation_union_or_intersection",
+                "answer_type": "timestamp_range",
                 "temporal_relation": "intersection",
             },
             {
@@ -1746,10 +1742,7 @@ class TKGQAGenerator:
                         complex_type_1_b_questions.append(duration_question_draft)
                 else:
                     # handle the Timeline Position Retrieval + Timeline Position Retrieval + Timeline Position Retrieval
-                    if (
-                        question_draft["answer_type"]
-                        == "relation_union_or_intersection"
-                    ):
+                    if question_draft["answer_type"] == "timestamp_range":
                         temporal_relation = question_draft["temporal_relation"]
                         random_pick_template = random.choice(
                             this_type_templates[temporal_relation]

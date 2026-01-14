@@ -17,7 +17,6 @@ coarse_answer_type = {
     "subject": "entity",
     "object": "entity",
     "timestamp_range": "time interval",
-    "relation_union_or_intersection": "time interval",
 }
 
 
