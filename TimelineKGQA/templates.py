@@ -39,7 +39,7 @@ QUESTION_TEMPLATES = {
                 "before": [
                     "Who/Which organisation {first_event_predicate} {first_event_object} before {second_event_subject} {second_event_predicate} {second_event_object}?",
                     "Before {second_event_subject} {second_event_predicate} {second_event_object}, Who/Which organisation {first_event_predicate} {first_event_object}?",
-                    "Early than {second_event_subject} {second_event_predicate} {second_event_object}, Who/Which organisation {first_event_predicate} {first_event_object}?",
+                    "Earlier than {second_event_subject} {second_event_predicate} {second_event_object}, Who/Which organisation {first_event_predicate} {first_event_object}?",
                     "Prior to {second_event_subject} {second_event_predicate} {second_event_object}, Who/Which organisation {first_event_predicate} {first_event_object}?",
                     "Who/Which Organisation {first_event_predicate} {first_event_object} ahead of {second_event_subject} {second_event_predicate} {second_event_object}?",
                     "Who/Which organisation {first_event_predicate} {first_event_object} preceding {second_event_subject} {second_event_predicate} {second_event_object}?",
@@ -47,52 +47,63 @@ QUESTION_TEMPLATES = {
                     "Who/Which organisation {first_event_predicate} {first_event_object} in advance of {second_event_subject} {second_event_predicate} {second_event_object}?",
                 ],
                 "after": [
-                    "Who {second_event_predicate} {second_event_object} {temporal_relation} {first_event_subject} {first_event_predicate} {first_event_object}?",
-                    "{temporal_relation} {first_event_subject} {first_event_predicate} {first_event_object}, who {second_event_predicate} {second_event_object}?",
+                    "Who/Which organisation {second_event_predicate} {second_event_object} {temporal_relation} {first_event_subject} {first_event_predicate} {first_event_object}?",
+                    "After {first_event_subject} {first_event_predicate} {first_event_object}, who/which organisation {second_event_predicate} {second_event_object}?",
                 ],
                 "during": [
-                    "Who {first_event_predicate} {first_event_object} during {second_event_subject} {second_event_predicate} {second_event_object}?",
-                    "during {second_event_subject} {second_event_predicate} {second_event_object}, who {first_event_predicate} {first_event_object}?",
-                    "Who {first_event_predicate} {first_event_object} while {second_event_subject} {second_event_predicate} {second_event_object}?",
-                    "while {second_event_subject} {second_event_predicate} {second_event_object}, who {first_event_predicate} {first_event_object}?",
-                    "Who {first_event_predicate} {first_event_object} in the course of {second_event_subject} {second_event_predicate} {second_event_object}?",
-                    "In the midst of {second_event_subject} {second_event_predicate} {second_event_object}, who {first_event_predicate} {first_event_object}?",
-                    "Who {first_event_predicate} {first_event_object} at the same time {second_event_subject} {second_event_predicate} {second_event_object}?",
+                    "Who/which organisation {first_event_predicate} {first_event_object} during {second_event_subject} {second_event_predicate} {second_event_object}?",
+                    "During {second_event_subject} {second_event_predicate} {second_event_object}, who/which organisation {first_event_predicate} {first_event_object}?",
+                    "Who/Which organisation {first_event_predicate} {first_event_object} while {second_event_subject} {second_event_predicate} {second_event_object}?",
+                    "While {second_event_subject} {second_event_predicate} {second_event_object}, who/which organisation {first_event_predicate} {first_event_object}?",
+                    "In the midst of {second_event_subject} {second_event_predicate} {second_event_object}, who/which organisation {first_event_predicate} {first_event_object}?",
                 ],
-                "meets": [
-                    # This means first end time = second start time
-                    "When {second_event_subject} starts {second_event_predicate} {second_event_object}, who ends {first_event_predicate} {first_event_object}?",
-                    "Who ends {first_event_predicate} {first_event_object} when {second_event_subject} starts {second_event_predicate} {second_event_object}?",
+                "start=start": [
+                    "Who/which organisation starts {first_event_predicate} {first_event_object}, at the same time {second_event_subject} start {second_event_predicate} {second_event_object}?",
+                    "At the same time {second_event_subject} start {second_event_predicate} {second_event_object}, who/which organisation starts {first_event_predicate} {first_event_object}?",
                 ],
-                "metby": [
-                    # This means first start time = second end time
-                    "When {second_event_subject} ends {second_event_predicate} {second_event_object}, who starts {first_event_predicate} {first_event_object}?",
-                    "Who starts {first_event_predicate} {first_event_object} when {second_event_subject} ends {second_event_predicate} {second_event_object}?",
+                "end=end": [
+                    "Who/Which organisation finishes {first_event_predicate} {first_event_object}, at the same time {second_event_subject} finish {second_event_predicate} {second_event_object}?",
+                    "At the same time {second_event_subject} finish {second_event_predicate} {second_event_object}, who/which organisation finishes {first_event_predicate} {first_event_object}?",
                 ],
-                "starts": [
-                    # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
-                    "Who starts {first_event_predicate} {first_event_object}, at the same time {second_event_subject} start {second_event_predicate} {second_event_object}?",
-                    "At the same time {second_event_subject} start {second_event_predicate} {second_event_object}, who starts {first_event_predicate} {first_event_object}?",
+                "start=end": [
+                    "When {second_event_subject} ends {second_event_predicate} {second_event_object}, who/which organisation starts {first_event_predicate} {first_event_object}?",
+                    "Who/which organisation starts {first_event_predicate} {first_event_object} when {second_event_subject} ends {second_event_predicate} {second_event_object}?",
                 ],
-                "startedby": [
-                    # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
-                    "Who starts {first_event_predicate} {first_event_object}, at the same time {second_event_subject} start {second_event_predicate} {second_event_object}?",
-                    "At the same time {second_event_subject} start {second_event_predicate} {second_event_object}, who starts {first_event_predicate} {first_event_object}?",
+                "end=start": [
+                    "When {second_event_subject} starts {second_event_predicate} {second_event_object}, who/which organisation ends {first_event_predicate} {first_event_object}?",
+                    "Who/which organisation ends {first_event_predicate} {first_event_object} when {second_event_subject} starts {second_event_predicate} {second_event_object}?",
                 ],
-                "finishes": [
-                    # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
-                    "Who finishes {first_event_predicate} {first_event_object}, at the same time {second_event_subject} finish {second_event_predicate} {second_event_object}?",
-                    "At the same time {second_event_subject} finish {second_event_predicate} {second_event_object}, who finishes {first_event_predicate} {first_event_object}?",
+                "start<start": [
+                    "Who/which organisation starts {first_event_predicate} {first_event_object} before {second_event_subject} starts {second_event_predicate} {second_event_object}?",
+                    "Before {second_event_subject} starts {second_event_predicate} {second_event_object}, who/which organisation starts {first_event_predicate} {first_event_object}?",
                 ],
-                "finishedby": [
-                    # This means first and second finish at the same time, however, the start time of the first event is before the start time of the second event
-                    "Who finishes {first_event_predicate} {first_event_object}, at the same time {second_event_subject} finish {second_event_predicate} {second_event_object}?",
-                    "At the same time {second_event_subject} finish {second_event_predicate} {second_event_object}, who finishes {first_event_predicate} {first_event_object}?",
+                "start>start": [
+                    "Who/which organisation starts {first_event_predicate} {first_event_object} after {second_event_subject} starts {second_event_predicate} {second_event_object}?",
+                    "After {second_event_subject} starts {second_event_predicate} {second_event_object}, who/which organisation starts {first_event_predicate} {first_event_object}?",
                 ],
-                "equal": [
-                    # This means first and second start and end at the same time
-                    "Who {first_event_predicate} {first_event_object}, at the same time {second_event_subject} {second_event_predicate} {second_event_object}?",
-                    "Who {first_event_predicate} {first_event_object} at the same start and end time {second_event_subject} start and end {second_event_predicate} {second_event_object}?",
+                "end<end": [
+                    "Who/which organisation ends {first_event_predicate} {first_event_object} before {second_event_subject} ends {second_event_predicate} {second_event_object}?",
+                    "Before {second_event_subject} ends {second_event_predicate} {second_event_object}, who/which organisation ends {first_event_predicate} {first_event_object}?",
+                ],
+                "end>end": [
+                    "Who/which organisation ends {first_event_predicate} {first_event_object} after {second_event_subject} ends {second_event_predicate} {second_event_object}?",
+                    "After {second_event_subject} ends {second_event_predicate} {second_event_object}, who/which organisation ends {first_event_predicate} {first_event_object}?",
+                ],
+                "start<end": [
+                    "Who/which organisation starts {first_event_predicate} {first_event_object} before {second_event_subject} ends {second_event_predicate} {second_event_object}?",
+                    "Before {second_event_subject} ends {second_event_predicate} {second_event_object}, who/which organisation starts {first_event_predicate} {first_event_object}?",
+                ],
+                "start>end": [
+                    "Who/which organisation starts {first_event_predicate} {first_event_object} after {second_event_subject} ends {second_event_predicate} {second_event_object}?",
+                    "After {second_event_subject} ends {second_event_predicate} {second_event_object}, who/which organisation starts {first_event_predicate} {first_event_object}?",
+                ],
+                "end<start": [
+                    "Who/which organisation ends {first_event_predicate} {first_event_object} before {second_event_subject} starts {second_event_predicate} {second_event_object}?",
+                    "Before {second_event_subject} starts {second_event_predicate} {second_event_object}, who/which organisation ends {first_event_predicate} {first_event_object}?",
+                ],
+                "end>start": [
+                    "Who/which organisation ends {first_event_predicate} {first_event_object} after {second_event_subject} starts {second_event_predicate} {second_event_object}?",
+                    "After {second_event_subject} starts {second_event_predicate} {second_event_object}, who/which organisation ends {first_event_predicate} {first_event_object}?",
                 ],
                 "duration_before": [
                     "Who {first_event_predicate} {first_event_object} {temporal_relation} {second_event_subject} {second_event_predicate} {second_event_object}?",
@@ -115,35 +126,42 @@ QUESTION_TEMPLATES = {
                     "Who/What/Which organisation is {first_event_predicate}ed {first_event_subject} while {second_event_subject} {second_event_predicate} {second_event_object}?",
                     "Who/What/Which organisation is {first_event_predicate}ed {first_event_subject} during the period when {second_event_subject} {second_event_predicate} {second_event_object}?",
                     "While {second_event_subject} {second_event_predicate} {second_event_object}, who/what/which organisation is {first_event_predicate}ed {first_event_subject}?",
-                    "Who/What/Which organisation is {first_event_predicate}ed {first_event_subject} in the course of {second_event_subject} {second_event_predicate} {second_event_object}?",
                 ],
-                "meets": [
-                    # This means first end time = second start time, this question is asking for the first object
-                    "{second_event_subject} starts {second_event_predicate} {second_event_object} at the same time {first_event_subject} ends {first_event_predicate} with who/what/which organisation?",
+                "start=start": [
+                    "At the same time {second_event_subject} start {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} starts {first_event_predicate}?",
                 ],
-                "metby": [
-                    # This means first start time = second end time, this question is asking for the first object
+                "end=end": [
+                    "At the same time {second_event_subject} finish {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} finishes {first_event_predicate}?",
+                ],
+                "start=end": [
                     "{second_event_subject} ends {second_event_predicate} {second_event_object} at the same time {first_event_subject} starts {first_event_predicate} with who/what/which organisation?",
                 ],
-                "starts": [
-                    # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
-                    "At the same time {second_event_subject} start {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} starts {first_event_predicate}?",
+                "end=start": [
+                    "{second_event_subject} starts {second_event_predicate} {second_event_object} at the same time {first_event_subject} ends {first_event_predicate} with who/what/which organisation?",
                 ],
-                "startedby": [
-                    # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
-                    "At the same time {second_event_subject} start {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} starts {first_event_predicate}?",
+                "start<start": [
+                    "Before {second_event_subject} starts {second_event_predicate} {second_event_object}, {first_event_subject} starts {first_event_predicate} with who/what/which organisation?",
                 ],
-                "finishes": [
-                    # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
-                    "At the same time {second_event_subject} finish {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} finishes {first_event_predicate}?",
+                "start>start": [
+                    "After {second_event_subject} starts {second_event_predicate} {second_event_object} {first_event_subject} starts {first_event_predicate} with who/what/which organisation?",
                 ],
-                "finishedby": [
-                    # This means first and second finish at the same time, however, the start time of the first event is before the start time of the second event
-                    "At the same time {second_event_subject} finish {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} finishes {first_event_predicate}?",
+                "end<end": [
+                    "Before {second_event_subject} ends {second_event_predicate} {second_event_object} {first_event_subject} ends {first_event_predicate} with who/what/which organisation?",
                 ],
-                "equal": [
-                    # This means first and second start and end at the same time
-                    "At the same time {second_event_subject} {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} {first_event_predicate}?",
+                "end>end": [
+                    "After {second_event_subject} ends {second_event_predicate} {second_event_object} {first_event_subject} ends {first_event_predicate} with who/what/which organisation?",
+                ],
+                "start<end": [
+                    "Before {second_event_subject} ends {second_event_predicate} {second_event_object} {first_event_subject} starts {first_event_predicate} with who/what/which organisation?",
+                ],
+                "start>end": [
+                    "After {second_event_subject} ends {second_event_predicate} {second_event_object} {first_event_subject} starts {first_event_predicate} with who/what/which organisation?",
+                ],
+                "end<start": [
+                    "Before {second_event_subject} starts {second_event_predicate} {second_event_object} {first_event_subject} starts {first_event_predicate} with who/what/which organisation?",
+                ],
+                "end>start": [
+                    "After {second_event_subject} starts {second_event_predicate} {second_event_object} {first_event_subject} ends {first_event_predicate} with who/what/which organisation?",
                 ],
                 "duration_before": [
                     "{temporal_relation} {second_event_subject} {second_event_predicate} {second_event_object}, in which organisation/what/who {first_event_subject} {first_event_predicate}?",
@@ -188,12 +206,25 @@ QUESTION_TEMPLATES = {
     },
     "complex": {
         "timeline_position_retrieval*2+temporal_constrained_retrieval": {
-            "subject": [
-                "Who {first_event_predicate} {first_event_object}, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate}, {third_event_object}?",
-            ],
-            "object": [
-                "{first_event_subject} {first_event_predicate} which organisation/what/who, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate} {third_event_object}?",
-            ],
+            # we can use two kinds of conditions in these types of
+            # questions: either interval based or interval bounds
+            # based.
+            "subject": {
+                "interval": [
+                    "Who {first_event_predicate} {first_event_object}, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate} {third_event_object}?",
+                ],
+                "bound": [
+                    "Who {first_event_temporal_bound} {first_event_predicate} {first_event_object}, {temporal_relation_12} {second_event_subject} {second_event_temporal_bound} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_temporal_bound} {third_event_predicate} {third_event_object}?",
+                ],
+            },
+            "object": {
+                "interval": [
+                    "{first_event_subject} {first_event_predicate} which organisation/what/who, {temporal_relation_12} {second_event_subject} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_predicate} {third_event_object}?",
+                ],
+                "bound": [
+                    "{first_event_subject} {first_event_temporal_bound} {first_event_predicate} which organisation/what/who, {temporal_relation_12} {second_event_subject} {second_event_temporal_bound} {second_event_predicate} {second_event_object}, {temporal_relation_13} {third_event_subject} {third_event_temporal_bound} {third_event_predicate} {third_event_object}?",
+                ],
+            },
         },
         "timeline_position_retrieval*3": {
             "timestamp_range": {
@@ -201,7 +232,6 @@ QUESTION_TEMPLATES = {
                     "From when to when, {first_event_subject} {first_event_predicate} {first_event_object}, at the same time, {second_event_subject} {second_event_predicate} {second_event_object}, at the same time, {third_event_subject} {third_event_predicate} {third_event_object}?"
                 ],
             },
-            # TODO: this is not really make sense, so we ignore it here
             "relation_duration": {
                 "duration": [
                     "What is the duration of {first_event_subject} {first_event_predicate} {first_event_object} jointly when {second_event_subject} {second_event_predicate} {second_event_object} and {third_event_subject} {third_event_predicate} {third_event_object}?"
@@ -262,61 +292,65 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
     "medium": {
         "timeline_position_retrieval_temporal_constrained_retrieval": {
             "subject": {
-                "X < Y": (
+                "before": (
                     "Prior to Friesland head of government Karin Evers-Meyer, Who/Which Organisation member of sports team England national under-21 football team?",
                     "Before Karin Evers-Meyer became the head of government in Friesland, who was a member of the England national under-21 football team?",
                 ),
-                "X > Y": (
-                    "After Gianluca Lamacchi member of sports team Genoa Cricket and Football Club, who member of sports team Como 1907?",
+                "after": (
+                    "After Gianluca Lamacchi member of sports team Genoa Cricket and Football Club, who/which organisation member of sports team Como 1907?",
                     "After Gianluca Lamacchi was a member of the Genoa Cricket and Football Club team, who was a member of the Como 1907 team?",
                 ),
-                "X o Y": (
-                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
+                "during": (
+                    "Who/Which organisation member of sports team Unione Sportiva Città di Palermo while Deborah Kaplan spouse Breckin Meyer?",
                     "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
                 ),
-                "X di Y": (
-                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
-                    "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
-                ),
-                "X d Y": (
-                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
-                    "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
-                ),
-                "X oi Y": (
-                    "Who member of sports team Unione Sportiva Città di Palermo in the course of Deborah Kaplan spouse Breckin Meyer?",
-                    "Who was a member of the Unione Sportiva Città di Palermo team while Deborah Kaplan was married to Breckin Meyer?",
-                ),
-                "X m Y": (
-                    # This means first end time = second start time
-                    "When Rob Andrews starts position held United States representative, who ends member of sports team Como 1907?",
-                    "When Rob Andrews began his role as a United States representative, who left the sports team Como 1907?",
-                ),
-                "X mi Y": (
-                    # This means first start time = second end time
-                    "When Elizabeth Amann ends employer Columbia University, who starts member of sports team Brighton & Hove Albion F.C.?",
-                    "When Elizabeth Amann ended her employment at Columbia University, who became a member of Brighton & Hove Albion F.C.?",
-                ),
-                "X s Y": (  # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
-                    "At the same time Charles Williams start position held Member of the 37th Parliament of the United Kingdom, who starts member of sports team Italy national football team?",
+                "start=start": (
+                    "At the same time Charles Williams start position held Member of the 37th Parliament of the United Kingdom, who/which organisation starts member of sports team Italy national football team?",
                     "When Charles Williams began his term as a Member of the 37th Parliament of the United Kingdom, who became a member of the Italy national football team?",
                 ),
-                "X si Y": (  # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
-                    "At the same time Fran Walsh start award received Nebula Award for Best Script, who starts member of sports team Unione Calcio Sampdoria?",
-                    "When Fran Walsh received the Nebula Award for Best Script, who became a member of the Unione Calcio Sampdoria sports team?",
-                ),
-                "X f Y": (  # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
-                    "Who finishes member of sports team Oldham Athletic A.F.C., at the same time Nadine Müller finish country of citizenship German Democratic Republic?",
+                "end=end": (
+                    "Who/which organisation finishes member of sports team Oldham Athletic A.F.C., at the same time Nadine Müller finish country of citizenship German Democratic Republic?",
                     "Who concluded their membership with the sports team Oldham Athletic A.F.C. at the time when Nadine Müller ceased to be a citizen of the German Democratic Republic?",
                 ),
-                "X fi Y": (
-                    # This means first and second finish at the same time, however, the start time of the first event is before the start time of the second event
-                    "Who finishes position held United States senator, at the same time Josh Rees finish member of sports team Brentford F.C.?",
-                    "Who ended their tenure as a United States senator when Josh Rees ended his time as a member of Brentford F.C.?",
+                "start=end": (
+                    "When Elizabeth Amann ends employer Columbia University, who/which organisation starts member of sports team Brighton & Hove Albion F.C.?",
+                    "When Elizabeth Amann ended her employment at Columbia University, who became a member of Brighton & Hove Albion F.C.?",
                 ),
-                "X = Y": (
-                    # This means first and second start and end at the same time
-                    "Who position held United States representative at the same start and end time Jeff Whitley start and end member of sports team Sunderland A.F.C.?",
-                    "Who started and ended holding the position of United States representative at the same time as the arrival and departure of Jeff Whitley as a member of Sunderland A.F.C.?",
+                "end=start": (
+                    "When Rob Andrews starts position held United States representative, who/which organisation ends member of sports team Como 1907?",
+                    "When Rob Andrews began his role as a United States representative, who left the sports team Como 1907?",
+                ),
+                "start<start": (
+                    "Who/which organisation starts member of sports team Oldham Athletic A.F.C., before Nadine Müller starts country of citizenship German Democratic Republic?",
+                    "Who started as a member of team Oldham Athletic A.F.C. before Nadine Müller obtained her citizenship of the German Democratic Republic?",
+                ),
+                "start>start": (
+                    "Who/which organisation starts member of sports team Oldham Athletic A.F.C., after Nadine Müller starts country of citizenship German Democratic Republic?",
+                    "Who started as a member of team Oldham Athletic A.F.C. after Nadine Müller obtained her citizenship of the German Democratic Republic?",
+                ),
+                "end<end": (
+                    "Before Elizabeth Amann ends employer Columbia University, who/which organisation ends member of sports team Brighton & Hove Albion F.C.?",
+                    "Before Elizabeth Amann ended her employment at Columbia University, who stopped being a member of Brighton & Hove Albion F.C.?",
+                ),
+                "end>end": (
+                    "After Elizabeth Amann ends employer Columbia University, who/which organisation ends member of sports team Brighton & Hove Albion F.C.?",
+                    "After Elizabeth Amann ended her employment at Columbia University, who stopped being a member of Brighton & Hove Albion F.C.?",
+                ),
+                "start<end": (
+                    "Before Elizabeth Amann ends employer Columbia University, who/which organisation starts member of sports team Brighton & Hove Albion F.C.?",
+                    "Before Elizabeth Amann ended her employment at Columbia University, who became a member of Brighton & Hove Albion F.C.?",
+                ),
+                "start>end": (
+                    "After Elizabeth Amann ends employer Columbia University, who/which organisation starts member of sports team Brighton & Hove Albion F.C.?",
+                    "After Elizabeth Amann ended her employment at Columbia University, who became a member of Brighton & Hove Albion F.C.?",
+                ),
+                "end<start": (
+                    "Before Elizabeth Amann starts employer Columbia University, who/which organisation ends member of sports team Brighton & Hove Albion F.C.?",
+                    "Before Elizabeth Amann started her employment at Columbia University, who stopped being a member of Brighton & Hove Albion F.C.?",
+                ),
+                "end>start": (
+                    "After Elizabeth Amann starts employer Columbia University, who/which organisation ends member of sports team Brighton & Hove Albion F.C.?",
+                    "After Elizabeth Amann started her employment at Columbia University, who stopped being a member of Brighton & Hove Albion F.C.?",
                 ),
                 "duration_before": (
                     "Who position held Prime Minister of Greece 10957 days before Aleksey Prokhorov award received Order of the Red Star?",
@@ -328,64 +362,65 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 ),
             },
             "object": {
-                "X < Y": (
+                "before": (
                     "Who/What/Which organisation is member of sports teamed by Hal Robson-Kanu before Mike Thompson position held United States representative?",
-                    "Before Mike Thompson held the position of United States representative, who is a member of a sports team that included Hal Robson-Kanu as a member?",
+                    "Who is a member of a sports team that included Hal Robson-Kanu before Mike Thompson held the position of United States representative?",
                 ),
-                "X > Y": (
+                "after": (
                     "Who/What/Which organisation is award receiveded by Harry Bolton Seed after Nikolay Rukavishnikov award received Order of Sukhbaatar?",
-                    "After Nikolay Rukavishnikov received the Order of Sukhbaatar, what award was awarded Harry Bolton Seed?",
+                    "What award was awarded to Harry Bolton Seed after Nikolay Rukavishnikov received the Order of Sukhbaatar?",
                 ),
-                "X d Y": (
+                "during": (
                     "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
-                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
+                    "Which organization was affected by the significant event of Hurricane Darby during the tenure of Tung Chan as a councillor?",
                 ),
-                "X di Y": (
-                    "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
-                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
-                ),
-                "X o Y": (
-                    "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
-                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
-                ),
-                "X oi Y": (
-                    "Which organisation is significant evented Hurricane Darby while Tung Chan position held councillor?",
-                    "During the tenure of Tung Chan as a councillor, which organization was affected by the significant event of Hurricane Darby?",
-                ),
-                "X m Y": (
-                    # This means first end time = second start time, this question is asking for the first object
-                    "Rob Andrews starts position held United States representative at the same time Dan Twardzik ends member of sports team with who/what/which organisation?",
-                    "When Rob Andrews begins his role as a United States representative, which sports team does Dan Twardzik leave?",
-                ),
-                "X mi Y": (
-                    # This means first start time = second end time, this question is asking for the first object
-                    "Mike McIntyre ends position held United States representative at the same time Rob Andrews starts position held with who/what/which organisation?",
-                    "As Mike McIntyre finishes his tenure as a United States representative, Which organization does Rob Andrews begin working for?",
-                ),
-                "X s Y": (
-                    # This means first and second start at the same time, however, the end time of the first event is before the end time of the second event
+                "start=start": (
                     "At the same time Bärbel Höhn start position held member of the German Bundestag, in which organisation/what/who Gianvito Plasmati starts member of sports team?",
                     "When Bärbel Höhn began her role as a member of the German Bundestag, which sports team did Gianvito Plasmati join?",
                 ),
-                "X si Y": (
-                    # This means first and second start at the same time, however, the end time of the first event is after the end time of the second event
-                    "At the same time Micky Holmes start member of sports team Northampton Town F.C., in which organisation/who/what Olivier Dassault starts position held?",
-                    "When Micky Holmes became a member of Northampton Town F.C., with which organization did Olivier Dassault begin his position?",
-                ),
-                "X f Y": (
-                    # This means first and second finish at the same time, however, the start time of the first event is after the start time of the second event
+                "end=end": (
                     "At the same time Noël Mamère finish position held member of the French National Assembly, in which organisation/who/what John Katko finishes position held?",
                     "When Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko leave?",
                 ),
-                "X fi Y": (
-                    # This means first and second finish at the same time, however, the start time of the first event is before the start time of the second event
-                    "At the same time Ruud Gullit finish member of sports team A.C. Milan, in which organisation Alberto Malusci finishes member of sports team",
-                    "When Ruud Gullit ended his time with A.C. Milan, which sports team did Alberto Malusci leave?",
+                "start=end": (
+                    "At the same time Noël Mamère finish position held member of the French National Assembly, in which organisation/who/what John Katko starts position held?",
+                    "When Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko join?",
                 ),
-                "X = Y": (
-                    # This means first and second start and end at the same time
-                    "At the same time Peter Mandelson position held Secretary of State for Business, Energy and Industrial Strategy, in which organisation/who/what Robinho member of sports team?",
-                    "At the same time as Mandelson was serving as the Secretary of State for Business, Energy and Industrial Strategy, which sports team was Robinho a member of?",
+                "end=start": (
+                    "At the same time Noël Mamère starts position held member of the French National Assembly, in which organisation/who/what John Katko ends position held?",
+                    "When Noël Mamère started his term as a member of the French National Assembly, which organization did John Katko leave?",
+                ),
+                "start<start": (
+                    "Before Noël Mamère starts position held member of the French National Assembly, John Katko starts position held with which organisation/who/what?",
+                    "Before Noël Mamère started his term as a member of the French National Assembly, which organization did John Katko join?",
+                ),
+                "start>start": (
+                    "After Noël Mamère starts position held member of the French National Assembly, in which organisation/who/what John Katko starts position held?",
+                    "After Noël Mamère started his term as a member of the French National Assembly, which organization did John Katko join?",
+                ),
+                "end<end": (
+                    "Before Noël Mamère ends position held member of the French National Assembly, John Katko ends position held with which organisation/who/what?",
+                    "Before Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko leave?",
+                ),
+                "end>end": (
+                    "After Noël Mamère ends position held member of the French National Assembly, in which organisation/who/what John Katko ends position held?",
+                    "After Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko leave?",
+                ),
+                "start<end": (
+                    "Before Noël Mamère ends position held member of the French National Assembly, John Katko starts position held with which organisation/who/what?",
+                    "Before Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko join?",
+                ),
+                "start>end": (
+                    "After Noël Mamère ends position held member of the French National Assembly, in which organisation/who/what John Katko starts position held?",
+                    "After Noël Mamère ended his term as a member of the French National Assembly, which organization did John Katko join?",
+                ),
+                "end<start": (
+                    "Before Noël Mamère starts position held member of the French National Assembly, John Katko ends position held with which organisation/who/what?",
+                    "Before Noël Mamère started his term as a member of the French National Assembly, which organization did John Katko leave?",
+                ),
+                "end>start": (
+                    "After Noël Mamère starts position held member of the French National Assembly, in which organisation/who/what John Katko ends position held?",
+                    "After Noël Mamère started his term as a member of the French National Assembly, which organization did John Katko leave?",
                 ),
                 "duration_before": (
                     "39082 days before Ana Miranda award received Ordem do Mérito Cultural, in which organisation/who/what Philip Stanhope, 1st Baron Weardale nominated for?",
@@ -398,7 +433,6 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
             },
         },
         "timeline_position_retrieval_timeline_position_retrieval": {
-            # because it is the time range, then we should also ask about the duration
             "timestamp_range": {
                 "intersection": (
                     "From when to when, Tom Hutchinson member of sports team Darlington F.C., at the same time, Giuseppe Iachini member of sports team Como 1907?",
@@ -421,7 +455,6 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                     "Is the duration of United States Seventh Fleet director/manager Robert F. Willard shorter the duration of Katrín Jakobsdóttir position held Member of the 2013-2016 Parliament of Iceland?",
                     "Was Robert F. Willard's tenure as director/manager of the United States Seventh Fleet shorter or longer than Katrín Jakobsdóttir's time serving as a Member of the 2013-2016 Parliament of Iceland?",
                 ),
-                # This is actually for union
                 "sum": (
                     "How long is the total duration of Association of Christian Democratic Students chairperson Jürgen Hardt and Giovanni Messe military rank lieutenant?",
                     "How long is the total duration of Jürgen Hardt mandate as a chairperson of the Association of Christian Democratic Students and Giovanni Messe time as a lieutenant?",
@@ -436,33 +469,37 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
     "complex": {
         "timeline_position_retrieval*2+temporal_constrained_retrieval": {
             "subject": {
-                "X < Y&X > Y": (
-                    "Who member of sports team Luton Town F.C., before Vladimír Mlynář position held editor-in-chief, after Sofie Ribbing work location, The Hague?",
-                    "Who was a member of the sports team Luton Town F.C., before Vladimír Mlynář held the position of editor-in-chief and after Sofie Ribbing worked in The Hague?",
+                "during&during": (
+                    "Who/which organisation member of sports team Luton Town F.C., during Vladimír Mlynář position held editor-in-chief, during Sofie Ribbing work location The Hague?",
+                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief, and Sofie Ribbing worked in The Hague?",
                 ),
-                "X m Y&X mi Y": (
-                    "Who member of sports team Luton Town F.C., meets Vladimír Mlynář position held editor-in-chief, metby Sofie Ribbing work location, The Hague?",
-                    "Who left team Luton Town F.C., at the same time as Vladimír Mlynář started as an editor-in-chief and joined team Luton Town F.C as Sofie Ribbing stopped working in The Hague?",
+                "before&after": (
+                    "Who/which organisation member of sports team Luton Town F.C., before Vladimír Mlynář position held editor-in-chief, after Sofie Ribbing work location The Hague?",
+                    "Who was a member of Luton Town F.C., before Vladimír Mlynář held the position of editor-in-chief, and after Sofie Ribbing worked in The Hague?",
                 ),
-                "X o Y&X oi Y": (
-                    "Who member of sports team Luton Town F.C., during Vladimír Mlynář position held editor-in-chief, during Sofie Ribbing work location, The Hague?",
-                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                "start=start&start=end": (
+                    "Who/which organisation starts member of sports team Luton Town F.C., at the same time as Vladimír Mlynář starts position held editor-in-chief, at the same time as Sofie Ribbing ends work location The Hague?",
+                    "Who started being a member of Luton Town F.C. when Vladimír Mlynář started holding the position of editor-in-chief and Sofie Ribbing stopped working in The Hague?",
                 ),
-                "X s Y&X si Y": (
-                    "Who member of sports team Luton Town F.C., starts Vladimír Mlynář position held editor-in-chief, startedby Sofie Ribbing work location, The Hague?",
-                    "Who joined team Luton Town F.C., at the same time as Vladimír Mlynář started as an editor-in-chief and Sofie Ribbing started working in The Hague?",
+                "start<start&start>start": (
+                    "Who/which organisation starts member of sports team Luton Town F.C., before Vladimír Mlynář starts position held editor-in-chief, after Sofie Ribbing starts work location The Hague?",
+                    "Who started being a member of Luton Town F.C. before Vladimír Mlynář started holding the position of editor-in-chief and after Sofie Ribbing started working in The Hague?",
                 ),
-                "X d Y&X di Y": (
-                    "Who member of sports team Luton Town F.C., during Vladimír Mlynář position held editor-in-chief, during Sofie Ribbing work location, The Hague?",
-                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
+                "start<end&start>end": (
+                    "Who/which organisation starts member of sports team Luton Town F.C., before Vladimír Mlynář ends position held editor-in-chief, after Sofie Ribbing ends work location The Hague?",
+                    "Who started being a member of Luton Town F.C. before Vladimír Mlynář stopped holding the position of editor-in-chief and after Sofie Ribbing stopped working in The Hague?",
                 ),
-                "X f Y&X fi Y": (
-                    "Who was a member of Luton Town F.C., while Vladimír Mlynář held the position of editor-in-chief and Sofie Ribbing worked in The Hague?",
-                    "Who left team Luton Town F.C. at the same time as Vladimír Mlynář left his position as an editor-in-chief and Sofie Ribbing finished working in The Hague?",
+                "end=end&end=start": (
+                    "Who/which organisation ends member of sports team Luton Town F.C., at the same time as Vladimír Mlynář ends position held editor-in-chief, at the same time as Sofie Ribbing starts work location The Hague?",
+                    "Who stopped being a member of Luton Town F.C. when Vladimír Mlynář stopped holding the position of editor-in-chief and Sofie Ribbing started working in The Hague?",
                 ),
-                "X = Y&X = Y": (
-                    "Who member of sports team Luton Town F.C., equal Vladimír Mlynář position held editor-in-chief, equal Sofie Ribbing work location, The Hague?",
-                    "Who joined and left Luton Town F.C., at the same time as Vladimír Mlynář started and ended his position as an editor-in-chief, and Sofie Ribbing started and ended working in The Hague?",
+                "end<end&end>end": (
+                    "Who/which organisation ends member of sports team Luton Town F.C., before Vladimír Mlynář ends position held editor-in-chief, after Sofie Ribbing ends work location The Hague?",
+                    "Who stopped being a member of Luton Town F.C. before Vladimír Mlynář stopped holding the position of editor-in-chief and after Sofie Ribbing stopped working in The Hague?",
+                ),
+                "end<start&end>start": (
+                    "Who/which organisation ends member of sports team Luton Town F.C., before Vladimír Mlynář starts position held editor-in-chief, after Sofie Ribbing starts work location The Hague?",
+                    "Who stopped being a member of Luton Town F.C. before Vladimír Mlynář started holding the position of editor-in-chief and after Sofie Ribbing started working in The Hague?",
                 ),
                 "duration_N(after|before)&duration_N(after|before)": (
                     "Who Affiliation To Finance / Economy / Commerce / Trade Ministry (Laos), 2302 days after Lawrence Gonzi Affiliation To Commonwealth of Nations, 1356 days after Algirdas Mykolas Brazauskas Affiliation To Social Democratic Party of Lithuania?",
@@ -470,33 +507,37 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 ),
             },
             "object": {
-                "X < Y&X > Y": (
+                "during&during": (
+                    "Adalbert Schnee military rank who/what/which organisation, during Gerhard Hager position held member of the European Parliament, during Sofie Ribbing work location The Hague?",
+                    "In which organisation did Adalbert Schnee held a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
+                ),
+                "before&after": (
                     "Adalbert Schnee military rank who/what/which organisation, before Gerhard Hager position held member of the European Parliament, after Sofie Ribbing work location The Hague?",
-                    "In which organisation did Adalbert Schnee hold a military rank, before Gerhard Hager was a member of the European Parliament and after Sofie Ribbing ended working in The Hague?",
+                    "In which organisation did Adalbert Schnee held a military rank, before Gerhard Hager was a member of the European Parliament and after Sofie Ribbing was working in The Hague?",
                 ),
-                "X m Y&X mi Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, meets Gerhard Hager position held member of the European Parliament, metby Sofie Ribbing work location The Hague?",
-                    "In which organisation did Adalbert Schnee start to hold a military rank at the same time as Gerhard Hager started being a member of the European Parliament, and ended holding that rank at the same time as Sofie Ribbing started working in The Hague?",
+                "start=start&start=end": (
+                    "Adalbert Schnee starts military rank who/what/which organisation, at the time Gerhard Hager starts position held member of the European Parliament, at the time Sofie Ribbing ends work location The Hague?",
+                    "In which organisation did Adalbert Schnee start to hold a military rank, at the same time as Gerhard Hager started being a member of the European Parliament and Sofie Ribbing stopped working in The Hague?",
                 ),
-                "X o Y&X oi Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, during Gerhard Hager position held member of the European Parliament, during Sofie Ribbing work location The Hague?",
-                    "In which organisation did Adalbert Schnee hold a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
+                "start<start&start>start": (
+                    "Adalbert Schnee starts military rank who/what/which organisation, before Gerhard Hager starts position held member of the European Parliament, after Sofie Ribbing starts work location The Hague?",
+                    "In which organisation did Adalbert Schnee start to hold a military rank, before Gerhard Hager started being a member of the European Parliament and after Sofie Ribbing started working in The Hague?",
                 ),
-                "X s Y&X si Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, starts Gerhard Hager position held member of the European Parliament, startedby Sofie Ribbing work location The Hague?",
-                    "In which organisation did Adalbert Schnee start to hold a military rank, at the same time as Gerhard Hager started being a member of the European Parliament and Sofie Ribbing started working in The Hague?",
+                "start<end&start>end": (
+                    "Adalbert Schnee starts military rank who/what/which organisation, before Gerhard Hager ends position held member of the European Parliament, after Sofie Ribbing ends work location The Hague?",
+                    "In which organisation did Adalbert Schnee start to hold a military rank, before Gerhard Hager stopped being a member of the European Parliament and after Sofie Ribbing stopped working in The Hague?",
                 ),
-                "X d Y&X di Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, during Gerhard Hager position held member of the European Parliament, during Sofie Ribbing work location The Hague?",
-                    "In which organisation did Adalbert Schnee hold a military rank, while Gerhard Hager was a member of the European Parliament and Sofie Ribbing was working in The Hague?",
+                "end=end&end=start": (
+                    "Adalbert Schnee ends military rank who/what/which organisation, at the time Gerhard Hager ends position held member of the European Parliament, at the time Sofie Ribbing starts work location The Hague?",
+                    "In which organisation did Adalbert Schnee stop holding a military rank at the same time as Gerhard Hager stopped being a member of the European Parliament and Sofie Ribbing started working in The Hague?",
                 ),
-                "X f Y&X fi Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, finishes Gerhard Hager position held member of the European Parliament, finishedby Sofie Ribbing work location, The Hague?",
-                    "In which organisation did Adalbert Schnee stop holding a military rank, at the same time as Gerhard Hager stopped being a member of the European Parliament and Sofie Ribbing stopped working in The Hague?",
+                "end<end&end>end": (
+                    "Adalbert Schnee ends military rank who/what/which organisation, before Gerhard Hager ends position held member of the European Parliament, after Sofie Ribbing ends work location The Hague?",
+                    "In which organisation did Adalbert Schnee stop holding a military rank before Gerhard Hager stopped being a member of the European Parliament and after Sofie Ribbing stopped working in The Hague?",
                 ),
-                "X = Y&X = Y": (
-                    "Adalbert Schnee military rank who/what/which organisation, equal Gerhard Hager position held member of the European Parliament, equal Sofie Ribbing work location The Hague?",
-                    "In which organisation did Adalbert Schnee start and end holding a military rank, at the same time as Gerhard Hager started and stopped being a member of the European Parliament and Sofie Ribbing started and stopped working in The Hague?",
+                "end<start&end>start": (
+                    "Adalbert Schnee ends military rank who/what/which organisation, before Gerhard Hager starts position held member of the European Parliament, after Sofie Ribbing starts work location The Hague?",
+                    "In which organisation did Adalbert Schnee stop holding a military rank before Gerhard Hager started being a member of the European Parliament and after Sofie Ribbing started working in The Hague?",
                 ),
                 "duration_N(after|before)&duration_N(after|before)": (
                     "Lien Thikeo Affiliation To which organisation/what/who, 2302 days after Lawrence Gonzi Affiliation To Commonwealth of Nations, 1356 days after Algirdas Mykolas Brazauskas Affiliation To Social Democratic Party of Lithuania?",
@@ -544,69 +585,52 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
 }
 
 
-def temporal_relation_semantic_to_allen(tr_semantic: str) -> str:
-    if tr_semantic == "before":
-        return "X < Y"
-    elif tr_semantic == "after":
-        return "X > Y"
-    elif tr_semantic == "finishes":
-        return "X f Y"
-    raise ValueError(tr_semantic)
-
-
-semantic_to_allen = {
-    "before": "X < Y",
-    "after": "X > Y",
-    "meets": "X m Y",
-    "metby": "X mi Y",
-    "finishes": "X f Y",
-    "finishedby": "X fi Y",
-    "starts": "X s Y",
-    "startedby": "X si Y",
-    "overlaps": "X o Y",
-    "overlappedby": "X oi Y",
-    "during": "X d Y",
-    "contains": "X di Y",
-    "equal": "X = Y",
-}
-
-
 def get_paraphrase_examples(question: Mapping) -> list[tuple[str, str]]:
     example = QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES[question["question_level"]][
         question["question_type"]
     ][question["answer_type"]]
-    if isinstance(example, dict):
-        # special handling for combinations of Allen's temporal
-        # relations
-        allen_relations = "(<|>|m|mi|o|oi|s|si|d|di|f|fi|=)"
-        if re.match(
-            r"X {} Y&X {} Y".format(allen_relations, allen_relations),
-            question["temporal_relation"],
-        ):
-            allen1, allen2 = question["temporal_relation"].split("&")
-            relevant_keys = [k for k in example.keys() if allen1 in k or allen2 in k]
-            assert len(relevant_keys) <= 2
-            return [example[k] for k in relevant_keys]
-        # special handling for complex duration question
-        # (temporal relation example: 'duration_234 days after&duration_during')
-        elif re.match(r"duration_[^&]*&duration_[^&]*", question["temporal_relation"]):
-            d1, d2 = question["temporal_relation"].split("&")
-            relevant_keys = ["duration_N(after|before)&duration_N(after|before)"]
-            d1_maybe_allen = semantic_to_allen.get(d1.replace("duration_", ""))
-            d2_maybe_allen = semantic_to_allen.get(d2.replace("duration_", ""))
-            relevant_keys += [
-                k
-                for k in example.keys()
-                if not d1_maybe_allen is None and d1_maybe_allen in k
-            ]
-            relevant_keys += [
-                k
-                for k in example.keys()
-                if not d2_maybe_allen is None and d2_maybe_allen in k
-            ]
-            return [example[k] for k in relevant_keys]
-        # general case: simply retrieve the example meant for
-        # question["temporal_relation"]
-        else:
-            return [example[question["temporal_relation"]]]
-    return [example]
+
+    if not isinstance(example, dict):
+        return [example]
+
+    timerange_relation_properties = (
+        "(before"
+        "|after"
+        "|during"
+        "|start=start"
+        "|end=end"
+        "|start=end"
+        "|end=start"
+        "|start<start"
+        "|start>start"
+        "|end<end"
+        "|end>end"
+        "|start<end"
+        "|start>end"
+        "|end<start"
+        "|end>start)"
+    )
+    if re.match(
+        r"{}&{}".format(timerange_relation_properties, timerange_relation_properties),
+        question["temporal_relation"],
+    ):
+        tpr1, tpr2 = question["temporal_relation"].split("&")
+        relevant_keys = [k for k in example.keys() if not k.startswith("duration_N")]
+        relevant_keys = [k for k in relevant_keys if tpr1 in k or tpr2 in k]
+        assert len(relevant_keys) <= 2
+        return [example[k] for k in relevant_keys]
+    # special handling for complex duration question
+    # (temporal relation example: 'duration_234 days after&duration_during')
+    elif re.match(r"duration_[^&]*&duration_[^&]*", question["temporal_relation"]):
+        d1, d2 = question["temporal_relation"].split("&")
+        relevant_keys = {"duration_N(after|before)&duration_N(after|before)"}
+        d1_maybe_tpr = d1.replace("duration_", "")
+        d2_maybe_tpr = d2.replace("duration_", "")
+        relevant_keys |= {
+            k for k in example.keys() if d1_maybe_tpr in k or d2_maybe_tpr in k
+        }
+        return [example[k] for k in relevant_keys]
+    # general case: simply retrieve the example meant for
+    # question["temporal_relation"]
+    else:
+        return [example[question["temporal_relation"]]]

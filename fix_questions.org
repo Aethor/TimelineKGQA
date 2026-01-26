@@ -845,7 +845,7 @@ answer: "Borjana Kristo"
 Solution: ... it seems that I forgot to add the examples in the prompt -_-
 
 
-** Questions with an answer type of duration have a time interval as an answer
+** Some questions with an answer type of duration have a time interval as an answer
 
 Also, somehow the time interval is /reversed/?
 
@@ -895,7 +895,7 @@ Fixed in [[elisp:(magit-show-commit "c60b03b" nil nil ".")][c60b03b]].
 
 ** =subject=, =object=, =timestamp_range=, =relation_union_or_intersection= answer types can have multiple answers
 
-This is fixed by [[elisp:(magit-show-commit "9a38130" nil nil ".")][9a38130]], [[elisp:(magit-show-commit "823d9d8" nil nil ".")][823d9d8]] by automaticall /expanding/ the
+This is fixed by [[orgit-rev:.::9a38130][9a38130]], [[orgit-rev:.::823d9d8][823d9d8]] by automatically /expanding/ the
 original answer to the set of valid answers.
 
 *** =subject=
@@ -929,11 +929,8 @@ A: (2003-01-15, 2005-04-20), (2005-04-21, 2007-01-15)
 Solution: use all valid ranges as answer.
 
 
-** =timestamp_range= format
+*** =relation_union_or_intersection=
 
-Label format should be (start, end) not "start and end".
-
-** for =relation_union_or_intersection= answer types, there are sometimes multiple possible answers
 Counter-intuitively, we can actually have multiple answers for
 intersection questions, but the label is always a single interval.
 
@@ -941,6 +938,12 @@ intersection questions, but the label is always a single interval.
 Q: During what time frame was Chris Nwabueze Ngige affiliated with the All Progressives Congress while René Harris was affiliated with the Executive Office of Nauru?
 A: 2001-03-30 to 2003-01-09, 2003-01-17 to 2003-01-18, 2003-08-08 to 2004-06-22
 #+end_example
+
+** =timestamp_range= format should be (start, end)
+
+Label format should be (start, end) not "start and end".
+
+This was fixed by earlier commits adding answer expansion [[orgit-rev:.::9a38130][9a38130]], [[orgit-rev:.::823d9d8][823d9d8]].
 
 ** =medium=, =subject=, =timeline_position_retrieval_temporal_constrained_retrieval=, =allen=
 
@@ -951,6 +954,8 @@ answer is not.
 Q: Before Subash Ghisingh was affiliated with the opposition major party in India, which organization was affiliated with the Justice/Law Ministry in Singapore?
 A: S. Jayakumar
 #+end_example
+
+A tentative fix is proposed by [[orgit-rev:.::4e33df84414c35fc1bf3254fe303091037ab5bf8][4e33df8]], [[orgit-rev:~/Dev/TimelineKGQA/::a005d439c83c265fdd75ece11a5792e627c2f0cf][a005d43]].
 
 ** =medium=, =relation_duration=, =timeline_position_retrieval_temporal_constrained_retrieval=, =duration_compare=
 
@@ -964,10 +969,16 @@ A: shorter
 P: Adama\ Kone:\ 4\ years\ 5\ months;\ Gabriel\ Tang:\ 18\ years\ (ongoing)
 #+end_example
 
-Solution: be more explicit in the template "is X duration shorter or
-longer than Y duration?".
+[[orgit-rev:.::4e33df84414c35fc1bf3254fe303091037ab5bf8][4e33df8]] and [[orgit-rev:~/Dev/TimelineKGQA/::a005d439c83c265fdd75ece11a5792e627c2f0cf][a005d43]] add the answer in the paraphrase prompt, which
+might allow for a better paraphrase. Additionally, we modified the
+related paraphrase example to be more precise in [[orgit-rev:.::052725e0bb3dbdf452c58c214702ef0f8f0ffcfa][052725e]]:
 
-** Underspecification problem??
+#+begin_example
+Template: "Is the duration of United States Seventh Fleet director/manager Robert F. Willard shorter the duration of Katrín Jakobsdóttir position held Member of the 2013-2016 Parliament of Iceland?"
+Old Example: "Was Robert F. Willard's tenure as director/manager of the United States Seventh Fleet shorter than Katrín Jakobsdóttir's time serving as a Member of the 2013-2016 Parliament of Iceland?"
+New Example: "Was Robert F. Willard's tenure as director/manager of the United States Seventh Fleet shorter or longer than Katrín Jakobsdóttir's time serving as a Member of the 2013-2016 Parliament of Iceland?"
+#+end_example
+
 
 ** =complex=, =relation_duration=, =timeline_position_retrieval*3=, =duration_compare=: The answer may not match the question
 
@@ -982,19 +993,72 @@ A: 2
 
 In that case, the question should be: /"What is the second longest
 affiliation among..."/
-** =complex=, =relation_duration=, =timeline_position_retrieval*3=, =duration_compare=: The answer is difficult to verify
 
-In these questions, the answer is a number corresponding to the index
-of a proposition in a question. This is difficult to verify
-automatically.
+We improve the template in [[orgit-rev:.::41de7daf281dff66b05523fdaa803f05e548ff40][41de7da]] by using ordinal numbers.
+
+** =medium=, =relation_allen=, =timeline_position_retrieval_timeline_position_retrieval=, =*= questions are missing
+
+[[orgit-rev:.::a130eb7f18c891ee2f5b93a29ab08778f0da63f1][a130eb7]] restores these questions. Originally there were both a
+"yes/no" question style (is the Allen relationship between these two
+events X?) and a "choice" question style (what's the allen
+relationship between these two events?)? We keep only the "choice"
+style which is more complex.
+
+** The =relation_union_or_intersection= should be =timestamp_range=
+
+This is addressed by [[orgit-rev:.::bb476dafbd43b0f36dd97e69d63ff39a13fdbc38][bb476da]].
+
+** Allen Relations Underspecification Problem
+
+- Some questions in the dataset suffer from the *underspecification*
+  problem
+
+
+Example with the =start= Allen interval relation:
 
 #+begin_example
-Q: What is the longest duration of Amadou Lamine Ba’s affiliation with the Ministry of Public Health and Quality of Life, Anna Fotyga’s affiliation with Elite (Poland), and Oumar Mariko’s affiliation with African Solidarity for Democracy and Independence?
-A: 1
+X [-----]
+Y [--------]
 #+end_example
 
-Solution: could we change the answer to one of the proposition in the
-question? in that case /"Anna Fotyga’s affiliation with Elite
-(Poland)"/?
-** =medium=, =relation_allen=, ... are missing
-** =relation_union_or_intersection= should just be =relation_intersection=
+We can define it as so:
+
+1. $X_{start} = Y_{start}$
+2. $X_{end} < Y_{end}$
+
+
+Example natural formulation in the dataset:
+
+#+begin_example 
+"Who joined team Manchester United at the same time as Charles
+Williams began his term as a member of the Parliament of the UK?"
+#+end_example
+
+The question only asks about condition 1, but forgets condition 2!
+
+Conclusion:
+
+- Model precision is *underestimated* because giving a correct answer
+  given the question is penalized.
+- The performance on the specific allen relation is not benchmarked
+
+
+| relation | before | after | during | start=start | end=end | start=end | end=start | start<start | start>start | end<end | end>end | start<end | start>end | end<start | end>start |
+|----------+--------+-------+--------+-------------+---------+-----------+-----------+-------------+-------------+---------+---------+-----------+-----------+-----------+-----------|
+| <        | X      | X     |        |             |         |           |           | X           |             | X       |         | X         |           | X         |           |
+| >        |        |       |        |             |         |           |           |             | X           |         | X       |           | X         |           | X         |
+| m        | X      |       |        |             |         |           | X         | X           |             | X       |         | X         |           |           |           |
+| mi       |        | X     |        |             |         | X         |           |             | X           |         | X       |           |           |           | X         |
+| o        |        |       | X      |             |         |           |           | X           |             | X       |         | X         |           |           | X         |
+| oi       |        |       | X      |             |         |           |           |             | X           |         | X       | X         |           |           | X         |
+| s        |        |       | X      | X           |         |           |           |             |             | X       |         | X         |           |           | X         |
+| si       |        |       | X      | X           |         |           |           |             |             |         | X       | X         |           |           | X         |
+| d        |        |       | X      |             |         |           |           |             | X           | X       |         | X         |           |           | X         |
+| di       |        |       | X      |             |         |           |           | X           |             |         | X       | X         |           |           | X         |
+| f        |        |       | X      |             | X       |           |           |             | X           |         |         | X         |           |           | X         |
+| fi       |        |       | X      |             | X       |           |           | X           |             |         |         | X         |           |           | X         |
+| =        |        |       | X      | X           | X       |           |           |             |             |         |         |           |           |           |           |
+
+| before | after | during | start=start | end=end | start=end | end=start | start<start | start>start | end<end | end>end | start<end | start>end | end<start | end>start |
+|--------+-------+--------+-------------+---------+-----------+-----------+-------------+-------------+---------+---------+-----------+-----------+-----------+-----------|
+| X      | X     | X      | X           | X       | X         | X         |             |             |         |         |           |           |           |           |

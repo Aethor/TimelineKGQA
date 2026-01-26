@@ -1,44 +1,44 @@
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given, assume, strategies as st
 import pandas as pd
+from TimelineKGQA.generator import TKGQAGenerator
 from TimelineKGQA.templates import get_paraphrase_examples
 
-st_allen_relation = st.one_of(
-    *[
-        st.just(f"X {op} Y")
-        for op in [
-            "<",
-            ">",
-            "m",
-            "mi",
-            "o",
-            "oi",
-            "s",
-            "si",
-            "d",
-            "di",
-            "f",
-            "fi",
-            "=",
-        ]
-    ]
+
+st_timerange_relation_property = st.one_of(
+    st.just("start=start"),
+    st.just("end=end"),
+    st.just("start=end"),
+    st.just("end=start"),
+    st.just("start<start"),
+    st.just("end<end"),
+    st.just("start<end"),
+    st.just("end<start"),
+    st.just("start>start"),
+    st.just("end>end"),
+    st.just("start>end"),
+    st.just("end>start"),
+    st.just("before"),
+    st.just("after"),
+    st.just("during"),
 )
 
 
 @given(
     st.one_of(st.just("subject"), st.just("object")),
-    st.tuples(st_allen_relation, st_allen_relation),
+    st_timerange_relation_property,
+    st_timerange_relation_property,
 )
-def test_get_paraphrase_examples_allen_combination(
-    answer_type: str, allen_relation: tuple[str, str]
+def test_get_paraphrase_examples_timerange_relation_properties_combination(
+    answer_type: str, tpr1: str, tpr2: str
 ):
-    allen1, allen2 = allen_relation
+    assume(TKGQAGenerator.are_timerange_relation_properties_compatible(tpr1, tpr2))
     examples = get_paraphrase_examples(
         {
             "question_level": "complex",
             "question_type": "timeline_position_retrieval*2+temporal_constrained_retrieval",
             "answer_type": answer_type,
-            "temporal_relation": f"{allen1}&{allen2}",
+            "temporal_relation": f"{tpr1}&{tpr2}",
         }
     )
     assert len(examples) <= 2
@@ -49,22 +49,24 @@ MEDIUM_TPR_TCR_SUBJ_QUESTION_PARAMS = [
         "medium",
         "timeline_position_retrieval_temporal_constrained_retrieval",
         "subject",
-        temporal_relation,
+        temporal_relation_property,
     )
-    for temporal_relation in [
-        "X < Y",
-        "X > Y",
-        "X m Y",
-        "X mi Y",
-        "X o Y",
-        "X oi Y",
-        "X d Y",
-        "X di Y",
-        "X s Y",
-        "X si Y",
-        "X f Y",
-        "X fi Y",
-        "X = Y",
+    for temporal_relation_property in [
+        "start=start",
+        "end=end",
+        "start=end",
+        "end=start",
+        "start<start",
+        "end<end",
+        "start<end",
+        "end<start",
+        "start>start",
+        "end>end",
+        "start>end",
+        "end>start",
+        "before",
+        "after",
+        "during",
         "duration_before",
         "duration_after",
     ]
@@ -109,12 +111,12 @@ def test_get_paraphrase_examples_no_combination(
 @pytest.mark.parametrize(
     "temporal_relation",
     [
-        ("duration_3883 days before&duration_starts"),
-        ("duration_3883 days after&duration_startedby"),
+        ("duration_3883 days before&duration_start=end"),
+        ("duration_3883 days after&duration_start<end"),
+        ("duration_3883 days after&duration_before"),
         ("duration_during&duration_2348 days before"),
-        ("duration_overlaps&duration_2348 days before"),
-        ("duration_finishes&duration_1713 days after"),
-        ("duration_finishedby&duration_1713 days after"),
+        ("duration_start=start&duration_2348 days before"),
+        ("duration_start<end&duration_1713 days after"),
     ],
 )
 def test_get_paraphrase_complex_duration(temporal_relation: str):

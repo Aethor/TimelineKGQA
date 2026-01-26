@@ -1,4 +1,3 @@
-from scratch import paraphrased
 from typing import Mapping
 
 from openai import OpenAI
