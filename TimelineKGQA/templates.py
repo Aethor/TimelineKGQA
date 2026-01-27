@@ -47,8 +47,8 @@ QUESTION_TEMPLATES = {
                     "Who/Which organisation {first_event_predicate} {first_event_object} in advance of {second_event_subject} {second_event_predicate} {second_event_object}?",
                 ],
                 "after": [
-                    "Who/Which organisation {second_event_predicate} {second_event_object} {temporal_relation} {first_event_subject} {first_event_predicate} {first_event_object}?",
-                    "After {first_event_subject} {first_event_predicate} {first_event_object}, who/which organisation {second_event_predicate} {second_event_object}?",
+                    "Who/Which organisation {first_event_predicate} {first_event_object} after {second_event_subject} {second_event_predicate} {second_event_object}?",
+                    "After {second_event_subject} {second_event_predicate} {second_event_object}, who/which organisation {first_event_predicate} {first_event_object}?",
                 ],
                 "during": [
                     "Who/which organisation {first_event_predicate} {first_event_object} during {second_event_subject} {second_event_predicate} {second_event_object}?",
