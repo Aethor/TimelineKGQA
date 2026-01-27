@@ -6,7 +6,44 @@ from datetime import timedelta
 from TimelineKGQA.generator import TKGQAGenerator
 
 
-def test_simple_subjects_matching():
+st_ascii = st.text(st.characters(codec="ascii"))
+
+
+@st.composite
+def st_timerange(draw):
+    start_time = draw(st.dates())
+    end_time = draw(st.dates(min_value=start_time))
+    return (start_time, end_time)
+
+
+@st.composite
+def st_event_dfs(draw, max_size: int = 128):
+    df_len = draw(st.integers(min_value=1, max_value=max_size))
+    timeranges = draw(st.lists(st_timerange(), min_size=df_len, max_size=df_len))
+    return pd.DataFrame(
+        {
+            "subject": draw(st.lists(st_ascii, min_size=df_len, max_size=df_len)),
+            "predicate": draw(st.lists(st_ascii, min_size=df_len, max_size=df_len)),
+            "object": draw(st.lists(st_ascii, min_size=df_len, max_size=df_len)),
+            "start_time": [str(start) for start, _ in timeranges],
+            "end_time": [str(end) for _, end in timeranges],
+        }
+    )
+
+
+@st.composite
+def st_event_dicts(draw):
+    start, end = draw(st_timerange())
+    return {
+        "subject": draw(st_ascii),
+        "predicate": draw(st_ascii),
+        "object": draw(st_ascii),
+        "start_time": str(start),
+        "end_time": str(end),
+    }
+
+
+def test_simple_subjects_matching_specific_example():
     generator = TKGQAGenerator.__new__(TKGQAGenerator)
     # fmt: off
     generator.events_df = pd.DataFrame(
@@ -20,6 +57,16 @@ def test_simple_subjects_matching():
     )
     # fmt: off
     assert generator.simple_subjects_matching("p1", "o1", "st1", "et1") == {"s1", "s2"}
+
+
+@given(st_event_dfs())
+def test_simple_subjects_matching_original_event_always_match(events_df: pd.DataFrame):
+    generator = TKGQAGenerator.__new__(TKGQAGenerator)
+    generator.events_df = events_df
+    event = generator.events_df.iloc[0]
+    assert event["subject"] in generator.simple_subjects_matching(
+        event["predicate"], event["object"], event["start_time"], event["end_time"]
+    )
 
 
 def test_simple_objects_matching():
@@ -36,6 +83,16 @@ def test_simple_objects_matching():
     )
     # fmt: on
     assert generator.simple_objects_matching("s1", "p1", "st1", "et1") == {"o1", "o2"}
+
+
+@given(st_event_dfs())
+def test_simple_objects_matching_original_event_always_match(events_df: pd.DataFrame):
+    generator = TKGQAGenerator.__new__(TKGQAGenerator)
+    generator.events_df = events_df
+    event = generator.events_df.iloc[0]
+    assert event["object"] in generator.simple_objects_matching(
+        event["subject"], event["predicate"], event["start_time"], event["end_time"]
+    )
 
 
 def test_simple_timestamp_range_matching():
@@ -55,6 +112,19 @@ def test_simple_timestamp_range_matching():
         ("st1", "et1"),
         ("st2", "et2"),
     }
+
+
+@given(st_event_dfs())
+def test_simple_timestamp_range_matching_original_event_always_match(
+    events_df: pd.DataFrame,
+):
+    generator = TKGQAGenerator.__new__(TKGQAGenerator)
+    generator.events_df = events_df
+    event = generator.events_df.iloc[0]
+    event_tr = (event["start_time"], event["end_time"])
+    assert event_tr in generator.simple_timestamp_range_matching(
+        event["subject"], event["predicate"], event["object"]
+    )
 
 
 def test_medium_subjects_matching_timerange_relation_property():
@@ -214,43 +284,6 @@ def test_medium_subjects_matching_duration_or_tpr__duration():
         second_start,
         second_end,
     ) == {"s1"}
-
-
-st_ascii = st.text(st.characters(codec="ascii"))
-
-
-@st.composite
-def st_timerange(draw):
-    start_time = draw(st.dates())
-    end_time = draw(st.dates(min_value=start_time))
-    return (start_time, end_time)
-
-
-@st.composite
-def st_event_dfs(draw, max_size: int = 128):
-    df_len = draw(st.integers(min_value=1, max_value=max_size))
-    timeranges = draw(st.lists(st_timerange(), min_size=df_len, max_size=df_len))
-    return pd.DataFrame(
-        {
-            "subject": draw(st.lists(st_ascii, min_size=df_len, max_size=df_len)),
-            "predicate": draw(st.lists(st_ascii, min_size=df_len, max_size=df_len)),
-            "object": draw(st.lists(st_ascii, min_size=df_len, max_size=df_len)),
-            "start_time": [str(start) for start, _ in timeranges],
-            "end_time": [str(end) for _, end in timeranges],
-        }
-    )
-
-
-@st.composite
-def st_event_dicts(draw):
-    start, end = draw(st_timerange())
-    return {
-        "subject": draw(st_ascii),
-        "predicate": draw(st_ascii),
-        "object": draw(st_ascii),
-        "start_time": str(start),
-        "end_time": str(end),
-    }
 
 
 @given(st_event_dicts(), st_event_dfs())
