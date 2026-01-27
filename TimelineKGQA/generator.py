@@ -1020,6 +1020,7 @@ class TKGQAGenerator:
                 else:
                     raise ValueError(question_draft["answer_type"])
                 question_draft["answer"] = ", ".join(matching_entities)
+
                 # this will generate the basic temporal relation questions.
                 # TODO: we also need to generate the one duration_before, duration_after
                 # If relation is before or after, then we can generate the duration_before, duration_after
@@ -3134,13 +3135,15 @@ class TKGQAGenerator:
             (self.events_df.subject == first_event_subject)
             & (self.events_df.predicate == first_event_predicate)
         ]
-        df.loc[:, "start_time_dt"] = df.start_time.apply(
-            TKGQAGenerator.utils_str_to_datetime
+        time_df = pd.DataFrame(
+            {
+                "start_time_dt": df.start_time.apply(
+                    TKGQAGenerator.utils_str_to_datetime
+                ),
+                "end_time_dt": df.end_time.apply(TKGQAGenerator.utils_str_to_datetime),
+            }
         )
-        df.loc[:, "end_time_dt"] = df.end_time.apply(
-            TKGQAGenerator.utils_str_to_datetime
-        )
-        duration_delta_series = df.apply(
+        duration_delta_series = time_df.apply(
             lambda row: self.relation_duration_calculation(
                 [row.start_time_dt, row.end_time_dt],
                 [second_event_start_time, second_event_end_time],
