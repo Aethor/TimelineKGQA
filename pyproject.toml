@@ -36,6 +36,9 @@ dependencies = [
 cpu = [
   "torch>=2.7.1",
 ]
+cuda128 = [
+  "torch>=2.7.1",
+]
 rocm64 = [
   "torch>=2.7.1",
   "pytorch-triton-rocm>=3.1.0", 
@@ -45,6 +48,7 @@ rocm64 = [
 conflicts = [
   [
     { extra = "cpu" },
+    { extra = "cuda128" },
     { extra = "rocm64" },
   ],
 ]
@@ -52,11 +56,17 @@ conflicts = [
 [tool.uv.sources]
 torch = [
   { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cuda128", extra = "cuda128" },
   { index = "pytorch-rocm64", extra = "rocm64" },
 ]
 pytorch-triton-rocm = [
   { index = "pytorch-rocm64", extra = "rocm64" },
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cuda128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
