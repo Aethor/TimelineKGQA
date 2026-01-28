@@ -85,7 +85,7 @@ def paraphrase_question(question: Mapping, client: OpenAI, model_name: str) -> s
         return ""
 
 
-def embedding_content(prompt, model_name="text-embedding-3-small"):
+def embedding_content(prompt, client: OpenAI, model_name: str):
     """
     Args:
         prompt: The prompt to generate the embedding for

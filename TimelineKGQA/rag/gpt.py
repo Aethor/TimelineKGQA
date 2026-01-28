@@ -13,6 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sqlalchemy import create_engine, text
 from tqdm import tqdm
 from transformers.models.tapas.tokenization_tapas import Question
+from openai import OpenAI
 
 from TimelineKGQA.constants import LOGS_DIR
 from TimelineKGQA.openai_utils import embedding_content
@@ -23,12 +24,24 @@ logger = get_logger(__name__)
 
 
 class RAGRank:
-    def __init__(self, table_name, host, port, user, password, db_name="tkgqa"):
+    def __init__(
+        self,
+        client: OpenAI,
+        table_name: str,
+        host: str,
+        port: int,
+        user: str,
+        password: str,
+        embedding_model: str,
+        db_name="tkgqa",
+    ):
+        self.client = client
         self.engine = create_engine(
             f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db_name}"
         )
         self.table_name = table_name
         self.load_event_data()
+        self.embedding_model = embedding_model
 
     def load_event_data(self):
         with timer(logger, "Load Event Data"):
@@ -74,7 +87,7 @@ class RAGRank:
             return
         for _, row in tqdm(df.iterrows(), total=len(df), desc="Embedding Facts"):
             content = f"{row['subject']} {row['predicate']} {row['object']} {row['start_time']} {row['end_time']}"
-            embedding = embedding_content(content)
+            embedding = embedding_content(content, self.client, self.embedding_model)
             with self.engine.connect() as cursor:
                 cursor.execute(
                     text(
@@ -88,8 +101,12 @@ class RAGRank:
         if df.empty:
             return
         for _, row in tqdm(df.iterrows(), total=len(df), desc="Embedding KG"):
-            subject_embedding = embedding_content(row["subject"])
-            object_embedding = embedding_content(row["object"])
+            subject_embedding = embedding_content(
+                row["subject"], self.client, self.embedding_model
+            )
+            object_embedding = embedding_content(
+                row["object"], self.client, self.embedding_model
+            )
             with self.engine.connect() as cursor:
                 cursor.execute(
                     text(
@@ -232,8 +249,8 @@ class RAGRank:
         # calculate the rank
         fig = self._create_visualization(question_df, fact_data)
 
-        info_text = f"""Question: {question_df['question']}
-Level: {question_df['question_level']}
+        info_text = f"""Question: {question_df["question"]}
+Level: {question_df["question_level"]}
 Number of facts: {len(fact_data)}
 Ground Truth facts: \n{event_info}
 Ground truth facts rank and similarity: {ground_truths_rank_and_value}
@@ -259,8 +276,8 @@ Top 3 simlarity: {top3_value.tolist()}
             fig = self._create_visualization(question_df, fact_data)
 
             info_text = f"""
-            - Question: {question_df['question']}
-            - Level: {question_df['question_level']}
+            - Question: {question_df["question"]}
+            - Level: {question_df["question_level"]}
             - Number of facts: {len(fact_data)}
             - Ground Truth facts: \n{event_info}
             - Ground truth facts rank and similarity: {ground_truths_rank_and_value}
@@ -453,7 +470,7 @@ Top 3 simlarity: {top3_value.tolist()}
         return tokens
 
     def get_word_embedding(self, word):
-        return embedding_content(word)
+        return embedding_content(word, self.client, self.embedding_model)
 
     def semantic_parse(self, questions_df: pd.DataFrame):
         """
@@ -527,7 +544,6 @@ def launch_gradio_app(rag):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="RAG Rank")
     parser.add_argument("--table_name", type=str, default="unified_kg_icews_actor")
     parser.add_argument("--host", type=str, default="localhost")
@@ -538,15 +554,21 @@ if __name__ == "__main__":
     parser.add_argument("--preprocess", action="store_true", default=False)
     parser.add_argument("--benchmark", type=str, default="naive")
     parser.add_argument("--semantic_parse", action="store_true", default=False)
+    parser.add_argument("--embedding_model", type=str, default="text-embedding-3-small")
+    parser.add_argument("--client_base_url", type=str, default=None)
+    parser.add_argument("--client_api_key", type=str, default=None)
     args = parser.parse_args()
 
+    client = OpenAI(base_url=args.client_base_url, api_key=args.client_api_key)
     rag = RAGRank(
+        client,
         table_name=args.table_name,
         host=args.host,
         port=args.port,
         user=args.user,
         password=args.password,
         db_name=args.db_name,
+        embedding_model=args.embedding_model,
     )
 
     if args.preprocess:
