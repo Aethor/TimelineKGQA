@@ -1,6 +1,6 @@
 import argparse
 import re
-from typing import List
+from typing import List, Optional
 
 import gradio as gr
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 class RAGRank:
     def __init__(
         self,
-        client: OpenAI,
+        client: Optional[OpenAI],
         table_name: str,
         host: str,
         port: int,
@@ -559,7 +559,9 @@ if __name__ == "__main__":
     parser.add_argument("--client_api_key", type=str, default=None)
     args = parser.parse_args()
 
-    client = OpenAI(base_url=args.client_base_url, api_key=args.client_api_key)
+    client = None
+    if args.preprocess:
+        client = OpenAI(base_url=args.client_base_url, api_key=args.client_api_key)
     rag = RAGRank(
         client,
         table_name=args.table_name,
