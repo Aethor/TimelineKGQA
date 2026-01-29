@@ -1,5 +1,4 @@
-import argparse
-import re
+import argparse, re, ast
 from typing import List, Optional
 
 import gradio as gr
@@ -55,9 +54,7 @@ class RAGRank:
     def _process_embeddings(self, columns):
         for col in columns:
             if col in self.event_df.columns:
-                self.event_df[col] = self.event_df[col].apply(
-                    lambda x: list(map(float, x[1:-1].split(",")))
-                )
+                self.event_df[col] = self.event_df[col].apply(ast.literal_eval)
 
     def add_embedding_column(self):
         with self.engine.connect() as cursor:
