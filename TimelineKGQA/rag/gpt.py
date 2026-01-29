@@ -58,14 +58,14 @@ class RAGRank:
 
     def add_embedding_column(self):
         with self.engine.connect() as cursor:
-            for col in ["embedding"]:
+            for table_name in [self.table_name, f"{self.table_name}_questions"]:
                 if not cursor.execute(
                     text(
-                        f"SELECT column_name FROM information_schema.columns WHERE table_name = '{self.table_name}' AND column_name = '{col}';"
+                        f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}' AND column_name = 'embedding';"
                     )
                 ).fetchone():
                     cursor.execute(
-                        text(f"ALTER TABLE {self.table_name} ADD COLUMN {col} vector;")
+                        text(f"ALTER TABLE {table_name} ADD COLUMN embedding vector;")
                     )
             cursor.commit()
 
