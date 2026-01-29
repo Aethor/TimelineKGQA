@@ -94,7 +94,9 @@ class RAGRank:
                 cursor.commit()
 
     def embed_kg(self):
-        df = pd.read_sql(f"SELECT * FROM {self.table_name};", self.engine)
+        df = pd.read_sql(
+            f"SELECT * FROM {self.table_name} WHERE embedding IS NULL;", self.engine
+        )
         if df.empty:
             return
         for _, row in tqdm(df.iterrows(), total=len(df), desc="Embedding KG"):
