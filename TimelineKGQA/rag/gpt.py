@@ -54,7 +54,9 @@ class RAGRank:
     def _process_embeddings(self, columns):
         for col in columns:
             if col in self.event_df.columns:
-                self.event_df[col] = self.event_df[col].apply(ast.literal_eval)
+                self.event_df[col] = self.event_df[col].apply(
+                    lambda x: ast.literal_eval(str(x))
+                )
 
     def add_embedding_column(self):
         with self.engine.connect() as cursor:
