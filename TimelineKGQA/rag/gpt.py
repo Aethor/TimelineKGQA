@@ -168,7 +168,7 @@ class RAGRank:
             self.engine,
         )
         questions_df["embedding"] = questions_df["embedding"].apply(
-            lambda x: list(map(float, x[1:-1].split(",")))
+            lambda x: ast.literal_eval(str(x))
         )
         return questions_df
 
