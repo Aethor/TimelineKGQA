@@ -47,9 +47,7 @@ class RAGRank:
             self.event_df = pd.read_sql(
                 f"SELECT * FROM {self.table_name};", self.engine
             )
-            self._process_embeddings(
-                ["embedding", "subject_embedding", "object_embedding"]
-            )
+            self._process_embeddings(["embedding"])
 
     def _process_embeddings(self, columns):
         for col in columns:
@@ -60,14 +58,7 @@ class RAGRank:
 
     def add_embedding_column(self):
         with self.engine.connect() as cursor:
-            for col in [
-                "embedding",
-                "subject_embedding",
-                "predicate_embedding",
-                "object_embedding",
-                "start_time_embedding",
-                "end_time_embedding",
-            ]:
+            for col in ["embedding"]:
                 if not cursor.execute(
                     text(
                         f"SELECT column_name FROM information_schema.columns WHERE table_name = '{self.table_name}' AND column_name = '{col}';"
@@ -95,23 +86,22 @@ class RAGRank:
                 )
                 cursor.commit()
 
-    def embed_kg(self):
+    def embed_questions(self):
         df = pd.read_sql(
-            f"SELECT * FROM {self.table_name} WHERE embedding IS NULL;", self.engine
+            f"SELECT * FROM {self.table_name}_questions WHERE embedding IS NULL;",
+            self.engine,
         )
         if df.empty:
             return
-        for _, row in tqdm(df.iterrows(), total=len(df), desc="Embedding KG"):
-            subject_embedding = embedding_content(
-                row["subject"], self.client, self.embedding_model
-            )
-            object_embedding = embedding_content(
-                row["object"], self.client, self.embedding_model
+        assert not self.client is None
+        for _, row in tqdm(df.iterrows(), total=len(df), desc="Embedding Questions"):
+            embedding = embedding_content(
+                row["question"], self.client, self.embedding_model
             )
             with self.engine.connect() as cursor:
                 cursor.execute(
                     text(
-                        f"UPDATE {self.table_name} SET subject_embedding = array{subject_embedding}::vector, object_embedding = array{object_embedding}::vector WHERE id = {row['id']};"
+                        f"UPDATE {self.table_name}_questions SET embedding = array{embedding}::vector WHERE id = {row['id']};"
                     )
                 )
                 cursor.commit()
@@ -174,12 +164,7 @@ class RAGRank:
 
     def _calculate_similarities(self, questions_df):
         q_emb = np.array(questions_df["embedding"].tolist(), dtype="float64")
-        # s_emb = np.array(self.event_df["subject_embedding"].tolist(), dtype="float64")
-        # o_emb = np.array(self.event_df["object_embedding"].tolist(), dtype="float64")
         e_emb = np.array(self.event_df["embedding"].tolist(), dtype="float64")
-        # return torch.tensor(
-        #     np.dot(q_emb, s_emb.T) + np.dot(q_emb, o_emb.T) + np.dot(q_emb, e_emb.T)
-        # )
         return torch.tensor(np.dot(q_emb, e_emb.T))
 
     def _evaluate_rankings(self, questions_df, top_30_indices):
@@ -373,8 +358,6 @@ Top 3 simlarity: {top3_value.tolist()}
                         (
                             fact,
                             fact_df["embedding"].values[0],
-                            fact_df["subject_embedding"].values[0],
-                            fact_df["object_embedding"].values[0],
                             # add indice of the fact
                             fact_df["id"].values[0],
                         )
@@ -578,11 +561,11 @@ if __name__ == "__main__":
         with timer(logger, "Add Embedding Column"):
             rag.add_embedding_column()
 
+        with timer(logger, "Embed Questions"):
+            rag.embed_questions()
+
         with timer(logger, "Embed Facts"):
             rag.embed_facts()
-
-        with timer(logger, "Embed KG"):
-            rag.embed_kg()
 
     if args.benchmark == "naive":
         rag.benchmark_naive_rag(semantic_parse=args.semantic_parse)
