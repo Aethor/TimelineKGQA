@@ -559,7 +559,7 @@ QUESTION_TEMPLATES_PARAPHRASE_EXAMPLES = {
                 ),
                 "duration_compare": (
                     "Which one is 2nd longest among Paddy McGuire member of sports team Manchester City F.C., Llibert Cuatrecasas i Membrado position held Member of the Congress of Deputies of Spain, George Nicoll Barnes position held Member of the 29th Parliament of the United Kingdom?",
-                    "Which one is the second longest among Paddy McGuire's membership in Manchester City F.C., Llibert Cuatrecasas i Membrado membership of the Congress of Deputies of Spain and George Nicoll Barnes' membership of the 29th Parliament of the United Kingdoms?",
+                    "Which one is the second longest among the following events: Paddy McGuire's membership in Manchester City F.C., Llibert Cuatrecasas i Membrado membership of the Congress of Deputies of Spain and George Nicoll Barnes' membership of the 29th Parliament of the United Kingdoms?",
                 ),
                 "sum": (
                     "How long is the total duration of Young Union chairperson Jürgen Echternach, Camille Mortenol military branch French Navy and Clarence Godber Burton position held councillor?",
