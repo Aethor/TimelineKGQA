@@ -1119,9 +1119,6 @@ class TKGQAGenerator:
                             second_event_end_time_dt,
                         ],
                     )
-                    question_draft["temporal_relation"] = temporal_allen_relation[
-                        "relation"
-                    ]
                     random_pick_template = random.choice(
                         this_type_templates["relation_allen"]
                     )
@@ -1134,6 +1131,7 @@ class TKGQAGenerator:
                         second_event_predicate=second_event_predicate,
                         second_event_object=second_event_object,
                     )
+                    question_draft["temporal_relation"] = "relation_allen"
                     question_draft["answer"] = temporal_answer
                 elif question_draft["answer_type"] == "relation_duration":
                     """There are four types in this category
@@ -1176,6 +1174,8 @@ class TKGQAGenerator:
                             second_event_predicate=second_event_predicate,
                             second_event_object=second_event_object,
                         )
+                        question_draft["answer"] = temporal_answer
+                        question_draft["temporal_relation"] = temporal_relation
                     elif temporal_relation == "duration_compare":
                         temporal_relation_duration = self.relation_allen_time_duration(
                             time_range_a=[
@@ -1197,6 +1197,8 @@ class TKGQAGenerator:
                             second_event_predicate=second_event_predicate,
                             second_event_object=second_event_object,
                         )
+                        question_draft["answer"] = temporal_answer
+                        question_draft["temporal_relation"] = temporal_relation
                     elif temporal_relation == "sum":
                         temporal_answer = self.utils_average_duration_calculation(
                             time_ranges=[
@@ -1219,6 +1221,8 @@ class TKGQAGenerator:
                             second_event_predicate=second_event_predicate,
                             second_event_object=second_event_object,
                         )
+                        question_draft["answer"] = temporal_answer
+                        question_draft["temporal_relation"] = temporal_relation
                     elif temporal_relation == "average":
                         temporal_answer = self.utils_average_duration_calculation(
                             time_ranges=[
@@ -1241,8 +1245,8 @@ class TKGQAGenerator:
                             second_event_predicate=second_event_predicate,
                             second_event_object=second_event_object,
                         )
-                    question_draft["answer"] = temporal_answer
-                    question_draft["temporal_relation"] = temporal_relation
+                        question_draft["answer"] = temporal_answer
+                        question_draft["temporal_relation"] = temporal_relation
 
         questions += medium_type_1_b_questions
         if paraphrased:
