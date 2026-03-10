@@ -1,35 +1,34 @@
 [project]
 name = "timelinekgqa"
 version = "0.1.0"
-description = "Add your description here"
+description = "TimelineKGQA is a temporal knowledge graph question generator."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pandas~=2.2.1",
-    "jupyter~=1.0.0",
     "sqlalchemy~=2.0.29",
     "psycopg2-binary",
-    "isort~=5.13.2",
-    "ruff",
     "igraph~=0.11.4",
     "plotly~=5.20.0",
     "transformers~=4.39.3",
     "sentence-transformers",
     "requests",
     "openai",
-    "mkdocstrings[python]",
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocs_gen_files",
-    "mkdocs-encryptcontent-plugin",
-    "flake8",
     "tqdm",
-    "gradio",
     "tiktoken",
-    "mesop",
-    "seaborn",
+    "datasets>=4.7.0",
+    "dspy>=3.1.3",
+    "rapidfuzz>=3.14.3",
+    "torch-geometric>=2.7.0",
+    "evaluate>=0.4.6",
+]
+
+[dependency-groups]
+dev = [
+    "isort",
+    "ruff",
     "pytest",
-    "hypothesis>=6.150.0",
+    "hypothesis>=6.150.0"
 ]
 
 [project.optional-dependencies]

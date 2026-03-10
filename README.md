@@ -1,22 +1,28 @@
-# TimelineKGQA
+# TimelineKGQA++
+
+TimelineKGQA is an improved version of TimelineKGQA. This repository is based on [the original TimelineKGQA work of Sun et. al](https://github.com/PascalSun/TimelineKGQA).
+
 
 # Development Setup
 
 ## Installation
 
-```bash
-# cd to current directory
-cd TimelineKGQA
-python3 -m venv venv
-pip install -r requirements.txt
-# if you are doing development
-pip install -r requirements.dev.txt
+If you have uv, you can simply use one of these line:
 
-# and then install the package
-pip install -e .
+```bash
+# torch cuda 12.8 version
+uv sync --extra cuda128
+# torch rocm 6.4 version
+uv sync --extra rocm64
+# torch cpu version
+uv sync --extra cpu
 ```
 
-## Usage
+If you need the development dependencies:
+
+```sh
+uv sync --dev
+```
 
 If you are doing development, you will also need a database to store the knowledge graph.
 
@@ -44,26 +50,11 @@ export OPENAI_API_KEY=sk-proj-xxx
 python3 -m TimelineKGQA.generator --paraphrased
 ```
 
-## Folder Structure
 
-```bash
-TimelineKGQA/
-├── TimelineKGQA/
-│   ├── __init__.py
-│   ├── generator.py
-│   ├── processor.py
-│   └── utils.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_generator.py
-│   └── test_processor.py
-├── docs/
-│   └── ...
-├── examples/
-│   └── basic_usage.py
-├── setup.py
-├── requirements.txt
-├── README.md
-└── LICENSE
+# RAG-only baseline 
+
+See `python -m TimelineKGQA.rag.inference --help` for details.
+
+```sh
+python -m TimelineKGQA.rag.inference --preprocess --benchmark naive
 ```
-
