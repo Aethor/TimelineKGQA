@@ -476,6 +476,13 @@ if __name__ == "__main__":
         help="API key for OpenAI compatible service for LLM-based metrics.",
     )
     parser.add_argument(
+        "-k",
+        "--metric-kwargs",
+        type=json.loads,
+        default={},  # TODO:
+        help="kwargs for each metric, as a json dictionary. Each kwarg key must be of the format 'METRIC_NAME.KWARG_KEY'. Example: '{\"interval_overlap.model\": \"google/gemma-3-4b-it\"}'",
+    )
+    parser.add_argument(
         "-m",
         "--metric-filter",
         nargs="*",
