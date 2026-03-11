@@ -1,5 +1,5 @@
 from typing import Literal, Callable
-import argparse, re, ast, math
+import argparse, re, ast, math, json
 import pathlib as pl
 import pandas as pd
 from collections import defaultdict
@@ -40,7 +40,7 @@ Info = dict[
 Metric = Callable[[list[ChatMessage], str, Info], float | int]
 
 
-def make_exact_accuracy() -> Metric:
+def make_exact_accuracy(**kwargs) -> Metric:
     def exact_accuracy(completion: list[ChatMessage], answer: str, info: Info) -> int:
         assert "content" in completion[-1]
         output = parse_model_output(completion[-1]["content"])
@@ -49,14 +49,14 @@ def make_exact_accuracy() -> Metric:
     return exact_accuracy
 
 
-def make_tools_calls_nb() -> Metric:
+def make_tools_calls_nb(**kwargs) -> Metric:
     def tool_calls_nb(completion: list[ChatMessage], answer: str, info: Info) -> int:
         return sum(1 if m["role"] == "tool" else 0 for m in completion)
 
     return tool_calls_nb
 
 
-def make_bleu() -> Metric:
+def make_bleu(**kwargs) -> Metric:
     bleu_metric = evaluate.load("bleu")
 
     def bleu(completion: list[ChatMessage], answer: str, info: Info) -> float:
@@ -72,7 +72,7 @@ def make_bleu() -> Metric:
     return bleu
 
 
-def make_bertscore() -> Metric:
+def make_bertscore(**kwargs) -> Metric:
     bert_score_metric = evaluate.load("bertscore")
 
     def bertscore(completion: list[ChatMessage], answer: str, info: Info) -> float:
@@ -90,11 +90,8 @@ def make_bertscore() -> Metric:
     return bertscore
 
 
-def make_timestamp_delta() -> Metric:
-    from vllm import LLM, SamplingParams
+def make_timestamp_delta(model: str, api_base: str, api_key: str, **kwargs) -> Metric:
     import dspy
-
-    llm = LLM("google/gemma-3-4b-it", max_model_len=1024)
 
     class Timestamp(dspy.Signature):
         text: str = dspy.InputField()
@@ -132,7 +129,7 @@ def make_timestamp_delta() -> Metric:
         assert "content" in completion[-1]
         output = parse_model_output(completion[-1]["content"])
 
-        with DspyOfflineVLLM(llm, SamplingParams(max_tokens=128)):
+        with dspy.context(lm=dspy.LM(model=model, api_base=api_base, api_key=api_key)):
             maybe_output_ts = ts_extractor(text=output)
             if not maybe_output_ts.contains_valid_timestamp:
                 return float("nan")
@@ -150,11 +147,8 @@ def make_timestamp_delta() -> Metric:
     return timestamp_delta
 
 
-def make_duration_delta() -> Metric:
-    from vllm import LLM, SamplingParams
+def make_duration_delta(model: str, api_base: str, api_key: str, **kwargs) -> Metric:
     import dspy
-
-    llm = LLM("google/gemma-3-4b-it", max_model_len=1024)
 
     class Duration(dspy.Signature):
         text: str = dspy.InputField()
@@ -228,7 +222,7 @@ def make_duration_delta() -> Metric:
         assert "content" in completion[-1]
         output = parse_model_output(completion[-1]["content"])
 
-        with DspyOfflineVLLM(llm, SamplingParams(max_tokens=128)):
+        with dspy.context(lm=dspy.LM(model=model, api_base=api_base, api_key=api_key))
             maybe_output_duration = duration_extractor(text=output)
             if not maybe_output_duration.contains_duration:
                 return float("nan")
@@ -253,11 +247,8 @@ def make_duration_delta() -> Metric:
     return duration_delta
 
 
-def make_interval_overlap() -> Metric:
-    from vllm import LLM, SamplingParams
+def make_interval_overlap(model: str, api_base: str, api_key: str, **kwargs) -> Metric:
     import dspy
-
-    llm = LLM("google/gemma-3-4b-it", max_model_len=1024)
 
     class Interval(dspy.Signature):
         text: str = dspy.InputField()
@@ -297,7 +288,7 @@ def make_interval_overlap() -> Metric:
         assert "content" in completion[-1]
         output = parse_model_output(completion[-1]["content"])
 
-        with DspyOfflineVLLM(llm, SamplingParams(max_tokens=128)):
+        with dspy.context(lm=dspy.LM(model=model, api_base=api_base, api_key=api_key)):
             out = interval_extractor(text=output)
             if not out.contains_valid_interval:
                 return float("nan")
@@ -336,10 +327,8 @@ def make_interval_overlap() -> Metric:
     return interval_overlap
 
 
-def make_llm_judge(model: str, api_base: str, api_key: str) -> Metric:
+def make_llm_judge(model: str, api_base: str, api_key: str, **kwargs) -> Metric:
     import dspy
-
-    llm = dspy.LM(model=model, api_base=api_base, api_key=api_key)
 
     class JudgeAnswer(dspy.Signature):
         question: str = dspy.InputField()
@@ -362,7 +351,7 @@ def make_llm_judge(model: str, api_base: str, api_key: str) -> Metric:
         ),
     ]
 
-    judge = llm.Predict(JudgeAnswer, demos=examples)
+    judge = dspy.Predict(JudgeAnswer, demos=examples)
 
     def llm_judge(completion: list[ChatMessage], answer: str, info: Info) -> float:
         assert "content" in completion[-1]
@@ -372,9 +361,10 @@ def make_llm_judge(model: str, api_base: str, api_key: str) -> Metric:
             return 0.0
         if output.lower() == answer.lower():
             return 1.0
-        judge_output = judge(
-            question=instruction, assistant_answer=output, reference_answer=answer
-        )
+        with dspy.context(lm=dspy.LM(model=model, api_base=api_base, api_key=api_key)):
+            judge_output = judge(
+                question=instruction, assistant_answer=output, reference_answer=answer
+            )
         return 1 if judge_output.assistant_is_correct else 0
 
     return llm_judge
@@ -397,14 +387,22 @@ def compute_metrics(
     answers: list[str],
     info_list: list[Info],
     metric_filter: list[str] | None,
+    metric_kwargs: dict,
 ) -> dict[str, list[float | int]]:
     metrics_dict = defaultdict(list)
+
+    # kwargs to send to all metrics
+    global_kwargs = {k: v for k, v in metric_kwargs.items() if not isinstance(v, dict)}
 
     for metric_name, metric_creator in METRICS:
         if not metric_filter is None and not metric_name in metric_filter:
             continue
+
+        # merge metric-specific kwargs with global kwargs
+        kwargs = {**global_kwargs, **metric_kwargs.get(metric_name, {})}
+
         try:
-            metric_fn = metric_creator()
+            metric_fn = metric_creator(**kwargs)
         except Exception as e:
             print(f"[warning] metric {metric_name} creation failed for: {repr(e)}")
             continue
@@ -459,7 +457,9 @@ def load_test_dataset(base_dataset_path: str, limit_per_qtype: int) -> Dataset:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument("-i", "--input-file", type=pl.Path)
     parser.add_argument(
         "-u",
@@ -479,8 +479,15 @@ if __name__ == "__main__":
         "-k",
         "--metric-kwargs",
         type=json.loads,
-        default={},  # TODO:
-        help="kwargs for each metric, as a json dictionary. Each kwarg key must be of the format 'METRIC_NAME.KWARG_KEY'. Example: '{\"interval_overlap.model\": \"google/gemma-3-4b-it\"}'",
+        default={
+            "base_url": "http://localhost:8000/v1",
+            "api_key": "dummy",
+            "llm_judge": {"model": "hosted_vllm/google/gemma-3-8b-it"},
+            "duration_delta": {"model": "hosted_vllm/google/gemma-3-8b-it"},
+            "interval_delta": {"model": "hosted_vllm/google/gemma-3-8b-it"},
+            "timestamp_delta": {"model": "hosted_vllm/google/gemma-3-8b-it"},
+        },
+        help="kwargs for each metric, as a json dictionary. Top-level keys indicate common configuration. Nested dictionaries indicate metric-specific dicts.",
     )
     parser.add_argument(
         "-m",
@@ -503,7 +510,9 @@ if __name__ == "__main__":
     info = df[
         ["answer_type", "question_type", "temporal_relation", "question_level"]
     ].to_dict("records")  # type: ignore
-    metrics = compute_metrics(completions, labels, info, args.metric_filter)
+    metrics = compute_metrics(
+        completions, labels, info, args.metric_filter, args.metric_kwargs
+    )
 
     for metric_key, metric_values in metrics.items():
         df[metric_key] = metric_values
