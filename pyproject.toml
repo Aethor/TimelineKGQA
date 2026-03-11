@@ -10,7 +10,7 @@ dependencies = [
     "psycopg2-binary",
     "igraph~=0.11.4",
     "plotly~=5.20.0",
-    "transformers~=4.39.3",
+    "transformers>=4.40.0",
     "sentence-transformers",
     "requests",
     "openai",
