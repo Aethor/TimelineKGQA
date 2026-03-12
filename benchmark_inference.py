@@ -1,16 +1,22 @@
-from typing import Literal, TypedDict, NotRequired, Literal
+from typing import Literal, TypedDict, NotRequired, Literal, cast
 import os, argparse, re
 import ast
 import pathlib as pl
 import pandas as pd
 from collections import defaultdict
-from datasets import Dataset
-from datasets import load_from_disk, Dataset
+from datasets import Dataset, DatasetDict
 from tqdm import tqdm
 import dspy
 from TimelineKGQA.agentic_retrieval.retrieval import TKGQAQueryTool
+from TimelineKGQA.agentic_retrieval.pyg_datasets import (
+    TKGQADataset,
+    TKGQAQuestion,
+    TKGQACronQuestionsDataset,
+    TKGQAIcewsActorDataset,
+)
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
 
 
 class ChatMessage(TypedDict):
@@ -58,8 +64,8 @@ def openai_output_msg_to_input(message: ChatCompletionMessage) -> ChatMessage:
     return input_dict
 
 
-def openai_output_to_input(response: ChatCompletion) -> list[ChatMessage]:
-    return [openai_output_msg_to_input(choice.message) for choice in response.choices]
+def openai_output_to_input(choices: list[Choice]) -> list[ChatMessage]:
+    return [openai_output_msg_to_input(choice.message) for choice in choices]
 
 
 def batched_inference(
@@ -114,11 +120,13 @@ def batched_inference(
             except Exception as e:
                 tqdm.write(str(e))
                 break
-            tqdm.write(str([choice.message for choice in response.choices]))
 
-            chat_list += openai_output_to_input(response)
+            choices = response.choices or []  # somehow, response.choices can be None
+            tqdm.write(str([choice.message for choice in choices]))
 
-            for choice in response.choices:
+            chat_list += openai_output_to_input(choices)
+
+            for choice in choices:
                 if not choice.message.tool_calls:
                     continue
                 for tool_call in choice.message.tool_calls:
@@ -212,7 +220,7 @@ def is_special_answer_value(answer: str, answer_type: str) -> bool:
         return answer == "forever"
     elif answer_type == "relation_duration":
         return answer == "There are no intersections between these time intervals."
-    elif answer_type in {"subject", "object", "relation_ranking"}:
+    elif answer_type in {"subject", "object", "relation_ranking", "relation_allen"}:
         return False
     else:
         raise ValueError(answer_type)
@@ -220,7 +228,16 @@ def is_special_answer_value(answer: str, answer_type: str) -> bool:
 
 def get_coarse_temporal_relation(
     temporal_relation: str,
-) -> Literal["timeline", "allen", "union/intersection", "ranking", "duration"]:
+) -> Literal[
+    "timeline",
+    "allen",
+    "union/intersection",
+    "ranking",
+    "duration",
+    "relation_allen",
+    "interval_condition",
+    "bound_condition",
+]:
     if temporal_relation in {"intersection", "union"}:
         return "union/intersection"
     elif temporal_relation in {"rank_start_time", "rank_end_time"}:
@@ -235,8 +252,15 @@ def get_coarse_temporal_relation(
     # 'TPR->TPR->TCO', but is not 'allen' or 'union/intersection'.
     elif temporal_relation.startswith("duration"):
         return "duration"
-    elif "X" in temporal_relation and "Y" in temporal_relation:
-        return "allen"
+    elif temporal_relation == "relation_allen":
+        return "relation_allen"
+    elif re.match(r"(before|during|after)(&(before|during|after))?", temporal_relation):
+        return "interval_condition"
+    elif re.match(
+        r"(start|end)(<|=|>)(start|end)(&(start|end)(<|=|>)(start|end))?",
+        temporal_relation,
+    ):
+        return "bound_condition"
     raise ValueError(temporal_relation)
 
 
@@ -250,20 +274,77 @@ def get_question_type_identifier(row: dict) -> tuple:
     )
 
 
-def load_test_dataset(
-    base_dataset_path: str, limit_per_qtype: int, special_limit_proportion: float = 0.1
+def load_dataset(dataset_name: Literal["cronquestions", "icewsactor"]) -> DatasetDict:
+    if args.dataset == "icewsactor":
+        dataset = TKGQAIcewsActorDataset(root="./pyg_datasets/TKGQA_IcewsActor")
+        system_prompt = """Reason step by step. You can use the query_knowledge_base tool to retrieve knowledge. The only possible relation in this knowledge base is Affiliation To. Always put your final answer within \\boxed{}. Do not add any other formatting."""
+    elif args.dataset == "cronquestions":
+        dataset = TKGQACronQuestionsDataset(root="./pyg_datasets/TKGQA_CronQuestions")
+        system_prompt = """Reason step by step. You can use the query_knowledge_base tool to retrieve knowledge. The 5 most frequent relations in the knowledge base are position held, award received, member of sports team, nominated for and winner. Always put your final answer within \\boxed{}. Do not add any other formatting."""
+    else:
+        raise ValueError(f"unknown dataset: {dataset_name}")
+
+    prompts = {"train": [], "dev": [], "test": []}
+    answers = {"train": [], "dev": [], "test": []}
+    info = {"train": [], "dev": [], "test": []}
+
+    for split_name, split in [
+        ("train", dataset.train),
+        ("dev", dataset.dev),
+        ("test", dataset.test),
+    ]:
+        for question in tqdm(split):
+            question = cast(TKGQAQuestion, question)
+            prompts[split_name].append(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": question.paraphrased_question},
+                ]
+            )
+            answers[split_name].append(question.answer)
+            info[split_name].append(
+                {
+                    "answer_type": question.answer_type,
+                    "question_type": question.question_type,
+                    "question_level": question.question_level,
+                    "temporal_relation": question.temporal_relation,
+                    "events": question.events,
+                }
+            )
+
+    tkgqa_query_tool = TKGQAQueryTool(dataset_name)
+    tools = [tkgqa_query_tool.get_tool_dict()]
+
+    return DatasetDict(
+        {
+            split_name: Dataset.from_dict(
+                {
+                    "prompt": prompts[split_name],
+                    "answer": answers[split_name],
+                    "info": info[split_name],
+                    "tools": [tools for _ in prompts[split_name]],
+                }
+            )
+            for split_name in ["train", "dev", "test"]
+        }
+    )
+
+
+def filter_test_dataset(
+    test: Dataset, limit_per_qtype: int, special_limit_proportion: float = 0.0
 ) -> Dataset:
     """Load a test dataset, filtering examples with certain
     constraints.
 
-    :param base_dataset_path: path to the dataset to load from.
+    :param test: dataset to load.
     :param limit_per_qtype: maximum number of examples per question
         type.
     :param special_limit_proportion: maximum proportion of special
         values per question type (see
         :func:`is_special_answer_value`).
     """
-    test = load_from_disk(base_dataset_path)["test"]
+    assert limit_per_qtype > 0
+    assert 0 <= special_limit_proportion <= 1.0
 
     type_to_questions = defaultdict(list)
     type_to_special_nb = defaultdict(int)
@@ -292,8 +373,16 @@ def load_test_dataset(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model-id", type=str)
-    parser.add_argument("-s", "--system-prompt", type=str, default=None)
-    parser.add_argument("-e", "--eval-dataset", type=pl.Path)
+    parser.add_argument(
+        "-s", "--system-prompt", type=str, default=None, help="System prompt override"
+    )
+    parser.add_argument(
+        "-d",
+        "--dataset",
+        type=str,
+        default="icewsactor",
+        help="either 'icewsactor' or 'cronquestions'",
+    )
     parser.add_argument("-l", "--examples-limit-per-question-type", type=int)
     parser.add_argument(
         "-u", "--base-url", type=str, default="http://localhost:8000/v1"
@@ -311,30 +400,32 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    print(f"benchmark inference starting. Will save output in {args.output_directory}")
+    print(f"benchmark inference starting. Will save output in {args.output_directory}.")
     os.makedirs(args.output_directory, exist_ok=True)
 
-    test_dataset = load_test_dataset(
-        args.eval_dataset, args.examples_limit_per_question_type
-    )
-    test_dataset.save_to_disk(args.output_directory / "eval_dataset")
+    # we can't have a '/' in the model name on the disk
+    safe_model_id = args.model_id.replace("/", ":")
+
+    test = load_dataset(args.dataset)["test"]
+    test = filter_test_dataset(test, args.examples_limit_per_question_type, 0.0)
+    test.save_to_disk(args.output_directory / f"{safe_model_id}_dataset")
 
     if not args.system_prompt is None:
-        test_dataset = test_dataset.map(
+        test = test.map(
             lambda example: adjust_system_prompt(example, args.system_prompt)
         )
 
     if not args.filter is None:
-        test_dataset = test_dataset.filter(lambda question: eval(args.filter))
+        test = test.filter(lambda question: eval(args.filter))
 
     preds = batched_inference(
         args.model_id,
         args.base_url,
         args.api_key,
-        test_dataset["prompt"],
-        test_dataset["info"],
+        test["prompt"],
+        test["info"],
     )
-    labels = test_dataset["answer"]
+    labels = test["answer"]
 
     df_rows = [
         {
@@ -346,10 +437,8 @@ if __name__ == "__main__":
             "label": label,
             "pred": pred,
         }
-        for row, label, pred in zip(test_dataset, labels, preds)
+        for row, label, pred in zip(test, labels, preds)
     ]
     df = pd.DataFrame(df_rows)
     print(df)
-    # we can't have a '/' in the model name
-    safe_model_id = args.model_id.replace("/", ":")
     df.to_csv(args.output_directory / f"{safe_model_id}.csv", index=False, header=True)

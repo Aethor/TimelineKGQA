@@ -376,40 +376,15 @@ class TKGQADataset(InMemoryDataset):
         return ["data.pt"]
 
     def download(self):
+        dataset_dir = pl.Path(__file__).parent.parent.parent / "Datasets"
         raw_dir = pl.Path(self.raw_dir)
-        download_url(
-            "https://github.com/Aethor/TimelineKGQA/archive/refs/heads/patch-questions.zip",
-            self.raw_dir,
-        )
-        branch = "patch-questions"
-        extract_zip(str(raw_dir / f"{branch}.zip"), self.raw_dir)
-        os.remove(raw_dir / f"{branch}.zip")
-        shutil.move(
-            raw_dir / f"TimelineKGQA-{branch}" / "Datasets" / "unified_kg_cron.csv",
-            raw_dir / "unified_kg_cron.csv",
-        )
-        shutil.move(
-            raw_dir
-            / f"TimelineKGQA-{branch}"
-            / "Datasets"
-            / "unified_kg_cron_questions_all.csv",
-            raw_dir / "unified_kg_cron_questions_all.csv",
-        )
-        shutil.move(
-            raw_dir
-            / f"TimelineKGQA-{branch}"
-            / "Datasets"
-            / "unified_kg_icews_actor_v2.csv",
-            raw_dir / "unified_kg_icews_actor_v2.csv",
-        )
-        shutil.move(
-            raw_dir
-            / f"TimelineKGQA-{branch}"
-            / "Datasets"
-            / "unified_kg_icews_actor_questions_all_v2.csv",
-            raw_dir / "unified_kg_icews_actor_questions_all_v2.csv",
-        )
-        shutil.rmtree(raw_dir / f"TimelineKGQA-{branch}")
+        for file in [
+            "unified_kg_cron.csv",
+            "unified_kg_cron_questions_all.csv",
+            "unified_kg_icews_actor_v2.csv",
+            "unified_kg_icews_actor_questions_all_v2.csv",
+        ]:
+            shutil.copy(dataset_dir / file, raw_dir / file)
 
     def _tkgqa_process(self, kg_csv_path: pl.Path, questions_csv_path: pl.Path):
         # 1. load questions
